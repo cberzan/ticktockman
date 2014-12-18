@@ -3,6 +3,7 @@
 from collections import defaultdict
 from datetime import timedelta
 import argparse
+import json
 
 from events import parse_events
 from ontology import parse_ontology
@@ -54,3 +55,15 @@ if __name__ == "__main__":
     # Print the tree.
     print "Time by category:"
     print_time_tree(time_tree)
+
+    # Write out JSON in a format suitable for D3.
+    def func(node, child_results):
+        data = {'name': node.label}
+        if node.children:
+            data['children'] = child_results
+        else:
+            data['size'] = node.time_spent.total_seconds()
+        return data
+    data = time_tree.transform(func)
+    with open("out.json", "w") as f:
+        json.dump(data, f, indent=4)

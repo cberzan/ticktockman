@@ -20,10 +20,19 @@ class Node:
         """
         Return a deep copy of this Node.
         """
-        copy = Node()
-        copy.label = self.label
-        copy.children = [child.copy() for child in self.children]
-        return copy
+        def func(node, child_results):
+            copy = Node()
+            copy.label = node.label
+            copy.children = child_results
+            return copy
+        return self.transform(func)
+
+    def transform(self, func):
+        """
+        Transform this Node recursively, using the given func.
+        """
+        child_results = [child.transform(func) for child in self.children]
+        return func(self, child_results)
 
     def _traverse(self, func, order, depth, parent):
         """
