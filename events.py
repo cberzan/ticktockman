@@ -20,6 +20,9 @@ class Event(object):
         self.category = None
         self.comment = None
 
+    def duration(self):
+        return self.end - self.begin
+
 
 def parse_events(csvfile):
     """
@@ -130,10 +133,3 @@ def parse_csv_line(lineno, fields):
         line.comment = fields[4]
 
     return line
-
-
-def convert_to_old_format(event):
-    """
-    Convert Event object to (begin, end, [category], comment) tuple.
-    """
-    return (event.begin, event.end, [event.category], event.comment)
