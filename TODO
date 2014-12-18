@@ -1,0 +1,2 @@
+- errors need filename, not just lineno
+- regression test: time(0, 0) evaluates as False, causing parsing error
