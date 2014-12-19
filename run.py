@@ -5,6 +5,7 @@ from datetime import timedelta
 import argparse
 import json
 
+from events import Event
 from events import parse_events
 from ontology import parse_ontology
 from time_tree import build_time_tree
@@ -57,13 +58,36 @@ if __name__ == "__main__":
     print_time_tree(time_tree)
 
     # Write out JSON in a format suitable for D3.
+    def event_to_dict(event):
+        data = {
+            'begin': event.begin.isoformat(),
+            'end': event.end.isoformat(),
+            'category': event.category,
+        }
+        if event.comment:
+            data['comment'] = event.comment
+        return data
+
+    event_dicts = []
+    for i, segment in enumerate(segments):
+        # Add "untracked" event between segments.
+        if i > 0:
+            event = Event()
+            event.begin = segments[i - 1][-1].end
+            event.end = segment[0].begin
+            event.category = 'untracked'
+            event_dicts.append(event_to_dict(event))
+        for event in segment:
+            event_dicts.append(event_to_dict(event))
+
     def func(node, child_results):
         data = {'name': node.label}
         if node.children:
             data['children'] = child_results
-        else:
-            data['size'] = node.time_spent.total_seconds()
         return data
-    data = time_tree.transform(func)
+    data = {
+        'categories': onto_tree.transform(func),
+        'events': event_dicts,
+    }
     with open("out.json", "w") as f:
         json.dump(data, f, indent=4)
