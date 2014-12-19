@@ -44,6 +44,11 @@ function getLeaves(root) {
     }
 }
 
+// Return true iff the given moment falls at midnight.
+function isMidnight(moment) {
+    return (moment.hour() == 0 && moment.minute() == 0);
+}
+
 // Split the given event where it crosses midnight, and return an array of
 // events that do not cross midnight.
 function splitEventAtMidnight(evnt) {
@@ -69,4 +74,28 @@ function splitEventAtMidnight(evnt) {
     };
     pieces.push(lastPiece);
     return pieces;
+}
+
+// Group events into days.
+// Returns an array of days, where each day is an array of events.
+// Assumes the events are already split at midnight, and cover a contiguous
+// stretch of time.
+function groupEventsIntoDays(events) {
+    var days = [];
+    var currentDay = [];
+    _.each(events, function(evnt) {
+        // If event starts at midnight, start a new day.
+        if (isMidnight(evnt.begin)) {
+            // Finish current day.
+            if (currentDay.length > 0) {
+                days.push(currentDay);
+            }
+            currentDay = [];
+        }
+        currentDay.push(evnt);
+    });
+    if (currentDay.length > 0) {
+        days.push(currentDay);
+    }
+    return days;
 }

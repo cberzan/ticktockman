@@ -217,25 +217,15 @@ function buildStackData(allData) {
     // Split events crossing midnight into pieces that do not cross midnight.
     var splitEvents = _.flatten(_.map(allData.events, splitEventAtMidnight));
 
-    // Group events into complete days, discarding events at the beginning and
-    // end of the data, which might be part of incomplete events.
-    var days = [];
-    var currentDay = "incomplete";
-    _.each(splitEvents, function(evnt) {
-        // If event starts at midnight, start a new day.
-        if (evnt.begin.hour() == 0 && evnt.begin.minute() == 0) {
-            // Finish current day.
-            if (currentDay != "incomplete") {
-                days.push(currentDay);
-            }
-            currentDay = [];
-        }
-        // Add event to current day.
-        if (currentDay != "incomplete") {
-            currentDay.push(evnt);
-        }
-    });
-    // FIXME: edge case when currentDay is complete after exiting the loop
+    // Group events into days, and discard any incomplete days at the beginning
+    // or end of the data.
+    var days = groupEventsIntoDays(splitEvents);
+    if (days.length > 0 && !isMidnight(_.first(_.first(days)).begin)) {
+        days.shift();
+    }
+    if (days.length > 0 && !isMidnight(_.last(_.last(days)).end)) {
+        days.pop();
+    }
 
     // Need at least a week's worth of data.
     if (days.length < 7) {

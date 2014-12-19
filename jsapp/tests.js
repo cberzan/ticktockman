@@ -1,3 +1,12 @@
+function mkev(category, begin, end, comment) {
+    return {
+        "category": category,
+        "begin": begin,
+        "end": end,
+        "comment": comment,
+    };
+}
+
 function eventsEqual(evnt, refEvnt) {
     return (
         evnt.category === refEvnt.category &&
@@ -21,57 +30,54 @@ function eventListsEqual(events, refEvents) {
 
 QUnit.test("splitEventAtMidnight", function(assert) {
     // An event that does not need to be split.
-    var evnt = {
-        "category": "reading",
-        "begin": moment("2014-12-19 12:24"),
-        "end": moment("2014-12-19 14:50"),
-        "comment": "A Tree Grows in Brooklyn",
-    };
+    var evnt = mkev(
+        "reading", moment("2014-12-19 12:24"),
+        moment("2014-12-19 14:50"), "A Tree Grows in Brooklyn"
+    );
     var pieces = splitEventAtMidnight(evnt);
     var refPieces = [evnt];
     assert.ok(eventListsEqual(pieces, refPieces));
 
     // An event that needs to be split in two.
-    var evnt = {
-        "category": "sleep",
-        "begin": moment("2014-12-19 23:00"),
-        "end": moment("2014-12-20 08:00"),
-    };
+    var evnt = mkev(
+        "sleep", moment("2014-12-19 23:00"), moment("2014-12-20 08:00"));
     var pieces = splitEventAtMidnight(evnt);
-    var refPieces = [{
-        "category": "sleep",
-        "begin": moment("2014-12-19 23:00"),
-        "end": moment("2014-12-20 00:00"),
-    }, {
-        "category": "sleep",
-        "begin": moment("2014-12-20 00:00"),
-        "end": moment("2014-12-20 08:00"),
-    }];
+    var refPieces = [
+        mkev("sleep", moment("2014-12-19 23:00"), moment("2014-12-20 00:00")),
+        mkev("sleep", moment("2014-12-20 00:00"), moment("2014-12-20 08:00")),
+    ];
     assert.ok(eventListsEqual(pieces, refPieces));
 
     // An event that needs to be split in four.
-    var evnt = {
-        "category": "untracked",
-        "begin": moment("2014-12-19 23:00"),
-        "end": moment("2014-12-22 08:00"),
-    };
+    var evnt = mkev(
+        "untracked", moment("2014-12-19 23:00"), moment("2014-12-22 08:00"));
     var pieces = splitEventAtMidnight(evnt);
-    var refPieces = [{
-        "category": "untracked",
-        "begin": moment("2014-12-19 23:00"),
-        "end": moment("2014-12-20 00:00"),
-    }, {
-        "category": "untracked",
-        "begin": moment("2014-12-20 00:00"),
-        "end": moment("2014-12-21 00:00"),
-    }, {
-        "category": "untracked",
-        "begin": moment("2014-12-21 00:00"),
-        "end": moment("2014-12-22 00:00"),
-    }, {
-        "category": "untracked",
-        "begin": moment("2014-12-22 00:00"),
-        "end": moment("2014-12-22 08:00"),
-    }];
+    var refPieces = [
+        mkev("untracked", moment("2014-12-19 23:00"), moment("2014-12-20 00:00")),
+        mkev("untracked", moment("2014-12-20 00:00"), moment("2014-12-21 00:00")),
+        mkev("untracked", moment("2014-12-21 00:00"), moment("2014-12-22 00:00")),
+        mkev("untracked", moment("2014-12-22 00:00"), moment("2014-12-22 08:00")),
+    ];
     assert.ok(eventListsEqual(pieces, refPieces));
+});
+
+QUnit.test("groupEventsIntoDays", function(assert) {
+    var events = [
+        mkev("0", moment("2014-12-19 14:00"), moment("2014-12-19 22:00")),
+        mkev("1", moment("2014-12-19 22:00"), moment("2014-12-20 00:00")),
+        mkev("2", moment("2014-12-20 00:00"), moment("2014-12-20 08:15")),
+        mkev("3", moment("2014-12-20 08:15"), moment("2014-12-20 23:02")),
+        mkev("4", moment("2014-12-20 23:02"), moment("2014-12-21 00:00")),
+        mkev("5", moment("2014-12-21 00:00"), moment("2014-12-21 07:30")),
+    ];
+    var days = groupEventsIntoDays(events);
+    var refDays = [
+        [events[0], events[1]],
+        [events[2], events[3], events[4]],
+        [events[5]],
+    ];
+    assert.equal(days.length, refDays.length);
+    for (var i = 0; i < days.length; i++) {
+        assert.ok(eventListsEqual(days[i], refDays[i]));
+    }
 });
