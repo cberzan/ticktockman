@@ -11,11 +11,19 @@ function color(d) {
   if (d.depth == 0) {
     return "#000000";
   } else if (d.depth == 1) {
-    return topLevelScale(d.name);
+    return categoryColor(d.name);
   } else {
     return d3.hsl(color(d.parent)).brighter(0.5).toString();
     // FIXME: disappears into white for some colors
   }
+}
+
+function categoryColor(category) {
+    if (category == "untracked") {
+        return "#000000";
+    } else {
+        return topLevelScale(category);
+    }
 }
 
 // Total size of all segments; we set this later, after loading the data.
@@ -73,6 +81,9 @@ function createSunburst(json) {
 };
 
 function createStreamGraph(data) {
+    var width = 1300;
+    var height = 400;
+
     var x = d3.scale.linear()
         .domain([0, data[0].length - 1])
         .range([0, width]);
@@ -93,14 +104,15 @@ function createStreamGraph(data) {
         .attr("width", width)
         .attr("height", height);
 
-    var stack = d3.layout.stack().offset("wiggle");
+    var stack = d3.layout.stack();
     var layers = stack(data);
 
     svg.selectAll("path")
         .data(layers)
         .enter().append("path")
         .attr("d", area)
-        .style("fill", function(d) { return topLevelScale(d.category); });
+        .style("fill", function(d) { return categoryColor(d[0].category); });
+    // FIXME: need color of leaf category, but using topLevelScale...
 };
 
 // Return humanized string like "3d5h", "5h3m", "3m5s", or "4s".
