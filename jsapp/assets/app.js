@@ -39,7 +39,7 @@ var arc = d3.svg.arc()
     .outerRadius(function(d) { return Math.sqrt(d.y + d.dy); });
 
 // Main function to draw and set up the visualization, once we have the data.
-function createVisualization(json) {
+function createSunburst(json) {
 
   // Bounding circle underneath the sunburst, to make it easier to detect
   // when the mouse leaves the parent g.
@@ -70,7 +70,38 @@ function createVisualization(json) {
   totalSize = path.node().__data__.value;
 
   d3.select("#total_time").text(humanizeSeconds(totalSize));
- };
+};
+
+function createStreamGraph(data) {
+    var x = d3.scale.linear()
+        .domain([0, data[0].length - 1])
+        .range([0, width]);
+
+    var y = d3.scale.linear()
+        .domain([0, 604800])
+        .range([height, 0]);
+
+    var color2 = d3.scale.linear()
+        .range(["#aad", "#556"]);
+
+    var area = d3.svg.area()
+        .x(function(d) { return x(d.x); })
+        .y0(function(d) { return y(d.y0); })
+        .y1(function(d) { return y(d.y0 + d.y); });
+
+    var svg = d3.select("#streamgraph").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    var stack = d3.layout.stack().offset("wiggle");
+    var layers = stack(data);
+
+    svg.selectAll("path")
+        .data(layers)
+        .enter().append("path")
+        .attr("d", area)
+        .style("fill", function(d) { return topLevelScale(d.category); });
+};
 
 // Return humanized string like "3d5h", "5h3m", "3m5s", or "4s".
 function humanizeSeconds(seconds) {
@@ -206,6 +237,116 @@ function getLeaves(root) {
     }
 }
 
+// Take an allData object and return an object suitable for
+// d3.stack(). The returned object is a 2-dimensional array of objects that
+// have x, y, y0, weekBegin, weekEnd and category properties.
+function buildStackData(allData) {
+    // There will be a layer for each leaf category.
+    var categories = _.map(getLeaves(allData.categories), function(leaf) {
+        return leaf.name;
+    });
+    categories.unshift("untracked");
+
+    // Split events crossing midnight into pieces that do not cross midnight.
+    var splitEvents = [];
+    _.each(allData.events, function(evnt) {
+        var begin = evnt.begin;
+        var midnight = begin.clone().hour(0).minute(0).add(1, 'day');
+        while (midnight.isBefore(evnt.end)) {
+            var piece = {
+                "category": evnt.category,
+                "begin": begin,
+                "end": midnight,
+                "comment": evnt.comment,
+            };
+            splitEvents.push(piece);
+            begin = piece.end;
+            midnight.add(1, 'day');
+        }
+        var lastPiece = {
+            "category": evnt.category,
+            "begin": begin,
+            "end": evnt.end,
+            "comment": evnt.comment,
+        };
+        splitEvents.push(lastPiece);
+    });
+
+    // Group events into complete days, discarding events at the beginning and
+    // end of the data, which might be part of incomplete events.
+    var days = [];
+    var currentDay = "incomplete";
+    _.each(splitEvents, function(evnt) {
+        // If event starts at midnight, start a new day.
+        if (evnt.begin.hour() == 0 && evnt.begin.minute() == 0) {
+            // Finish current day.
+            if (currentDay != "incomplete") {
+                days.push(currentDay);
+            }
+            currentDay = [];
+        }
+        // Add event to current day.
+        if (currentDay != "incomplete") {
+            currentDay.push(evnt);
+        }
+    });
+    // FIXME: edge case when currentDay is complete after exiting the loop
+
+    // Need at least a week's worth of data.
+    if (days.length < 7) {
+        // TODO UI
+        console.log("not enough data");
+        return;
+    }
+
+    // Build layers array.
+    var layers = [];
+    var categToLayer = {};
+    var categToSeconds = {};
+    _.each(categories, function(category) {
+        layer = [];
+        layers.push(layer);
+        categToLayer[category] = layer;
+        categToSeconds[category] = 0;
+    });
+    var weekIndex = 0;
+    var weekBegin = days[0][0].begin;
+    var weekEnd = days[6][days[6].length - 1].end;
+    var addDay = function(day, coef) {
+        _.each(day, function(evnt) {
+            var seconds = evnt.end.diff(evnt.begin, 'seconds');
+            categToSeconds[evnt.category] += seconds * coef;
+        });
+    };
+    var saveWeek = function() {
+        _.each(categToLayer, function(layer, category) {
+            layer.push({
+                "x": weekIndex,
+                "y": categToSeconds[category],
+                "y0": 0,
+                "weekBegin": weekBegin,
+                "weekEnd": weekEnd,
+                "category": category,
+            });
+        });
+    };
+    for (var i = 0; i < 7; i++) {
+        addDay(days[i], 1);
+    }
+    saveWeek();
+    for(var i = 7; i < days.length; i++) {
+        weekIndex += 1;
+        weekBegin.add(1, 'day');
+        weekEnd.add(1, 'day');
+        addDay(days[i - 7], -1);
+        addDay(days[i], 1);
+        saveWeek();
+    }
+    console.log(layers);
+    // throw new Error("STOP");
+    return layers;
+}
+
 function main() {
     // Parse ISO-8601 datetimes into Moment objects.
     for (var i = 0; i < data.events.length; i++) {
@@ -213,8 +354,8 @@ function main() {
         data.events[i].end = moment(data.events[i].end);
     }
 
-    // Create sunburst visualization.
-    createVisualization(buildPartitionData(data));
+    createSunburst(buildPartitionData(data));
+    createStreamGraph(buildStackData(data));
 }
 
 main();
