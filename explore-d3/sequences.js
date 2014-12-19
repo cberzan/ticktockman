@@ -3,15 +3,19 @@ var width = 750;
 var height = 600;
 var radius = Math.min(width, height) / 2;
 
-// Mapping of step names to colors.
-var colors = {
-  "home": "#5687d1",
-  "product": "#7b615c",
-  "search": "#de783b",
-  "account": "#6ab975",
-  "other": "#a173d1",
-  "end": "#bbbbbb"
-};
+// Color scale for the top-level categories.
+var topLevelScale = d3.scale.category10();
+
+// Get the color for the given node.
+function color(d) {
+  if (d.depth == 0) {
+    return "#000000";
+  } else if (d.depth == 1) {
+    return topLevelScale(d.name);
+  } else {
+    return d3.hsl(color(d.parent)).brighter(0.7).toString();
+  }
+}
 
 // Total size of all segments; we set this later, after loading the data.
 var totalSize = 0; 
@@ -59,7 +63,7 @@ function createVisualization(json) {
       .attr("display", function(d) { return d.depth ? null : "none"; })
       .attr("d", arc)
       .attr("fill-rule", "evenodd")
-      .style("fill", function(d) { return colors[d.name]; })
+      .style("fill", function(d) { return color(d); })
       .style("opacity", 1)
       .on("mouseover", mouseover);
 
