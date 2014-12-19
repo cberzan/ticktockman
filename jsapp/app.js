@@ -1,3 +1,5 @@
+var secondsInADay = 86400.0;
+
 // Dimensions of sunburst.
 var width = 750;
 var height = 600;
@@ -134,7 +136,6 @@ function mouseover(d) {
   var timeSpentString = humanizeSeconds(secondsSpent);
   d3.select("#timespent").text(timeSpentString);
 
-  var secondsInADay = 86400.0;
   var secondsPerDay = secondsInADay * d.value / totalSize;
   var perDayString = humanizeSeconds(secondsPerDay);
   d3.select("#perday").text(perDayString);
@@ -195,11 +196,10 @@ function buildPartitionData(allData) {
         if (evnt.category === 'untracked') {
             return;
         }
-        var seconds = evnt.end.diff(evnt.begin, 'seconds');
         if (!_.has(categoryToLeaf, evnt.category)) {
             throw new Error("category " + evnt.category + " is not a leaf");
         }
-        categoryToLeaf[evnt.category].size += seconds;
+        categoryToLeaf[evnt.category].size += durationSeconds(evnt);
     });
     return tree;
 }
@@ -227,6 +227,15 @@ function buildStackData(allData) {
         days.pop();
     }
 
+    // Sanity check that the events in each day add up to a full day.
+    _.each(days, function(day) {
+        var totalSeconds = _.reduce(day, function(memo, evnt) {
+            assert(durationSeconds(evnt) >= 0);
+            return memo + durationSeconds(evnt);
+        }, 0);
+        assert(totalSeconds == secondsInADay);
+    });
+
     // Need at least a week's worth of data.
     if (days.length < 7) {
         // TODO UI
@@ -245,36 +254,34 @@ function buildStackData(allData) {
         categToSeconds[category] = 0;
     });
     var weekIndex = 0;
-    var weekBegin = days[0][0].begin;
-    var weekEnd = days[6][days[6].length - 1].end;
-    var addDay = function(day, coef) {
-        _.each(day, function(evnt) {
-            var seconds = evnt.end.diff(evnt.begin, 'seconds');
-            categToSeconds[evnt.category] += seconds * coef;
-        });
-    };
+    var weekBegin = days[0][0].begin.clone();
+    var weekEnd = days[6][days[6].length - 1].end.clone();
     var saveWeek = function() {
+        var totalSeconds = 0;
         _.each(categToLayer, function(layer, category) {
+            totalSeconds += categToSeconds[category];
             layer.push({
                 "x": weekIndex,
                 "y": categToSeconds[category],
                 "y0": 0,
-                "weekBegin": weekBegin,
-                "weekEnd": weekEnd,
+                "weekBegin": weekBegin.clone(),
+                "weekEnd": weekEnd.clone(),
                 "category": category,
             });
         });
+        // Sanity check that the time spent adds up to an entire week.
+        assert(totalSeconds == secondsInADay * 7);
     };
     for (var i = 0; i < 7; i++) {
-        addDay(days[i], 1);
+        tallyEvents(days[i], 1, categToSeconds);
     }
     saveWeek();
     for(var i = 7; i < days.length; i++) {
         weekIndex += 1;
         weekBegin.add(1, 'day');
         weekEnd.add(1, 'day');
-        addDay(days[i - 7], -1);
-        addDay(days[i], 1);
+        tallyEvents(days[i - 7], -1, categToSeconds);
+        tallyEvents(days[i], 1, categToSeconds);
         saveWeek();
     }
     console.log(layers);

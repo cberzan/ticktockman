@@ -1,3 +1,10 @@
+function assert(condition, message) {
+    if (!condition) {
+        message = message || "Assertion failed";
+        throw new Error(message);
+    }
+}
+
 // Take a number of seconds and return a compact humanized string, like "3d5h",
 // "5h3m", "3m5s", or "4s".
 function humanizeSeconds(seconds) {
@@ -49,6 +56,11 @@ function isMidnight(moment) {
     return (moment.hour() == 0 && moment.minute() == 0);
 }
 
+// Return duration of the given event, in seconds.
+function durationSeconds(evnt) {
+    return evnt.end.diff(evnt.begin, 'seconds');
+}
+
 // Split the given event where it crosses midnight, and return an array of
 // events that do not cross midnight.
 function splitEventAtMidnight(evnt) {
@@ -98,4 +110,15 @@ function groupEventsIntoDays(events) {
         days.push(currentDay);
     }
     return days;
+}
+
+// Add each event's duration in seconds, multiplied by coef, to the event's
+// category in categToSeconds. Assumes categToSeconds has a property for every
+// category.
+function tallyEvents(events, coef, categToSeconds) {
+    _.each(events, function(evnt) {
+        assert(_.has(categToSeconds, evnt.category));
+        assert(durationSeconds(evnt) >= 0);
+        categToSeconds[evnt.category] += durationSeconds(evnt) * coef;
+    });
 }
