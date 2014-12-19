@@ -67,7 +67,7 @@ var arc = d3.svg.arc()
     .outerRadius(function(d) { return Math.sqrt(d.y + d.dy); });
 
 // Main function to draw and set up the visualization, once we have the data.
-function createSunburst(json) {
+function createSunburst(data) {
 
   // Bounding circle underneath the sunburst, to make it easier to detect
   // when the mouse leaves the parent g.
@@ -76,12 +76,12 @@ function createSunburst(json) {
       .style("opacity", 0);
 
   // For efficiency, filter nodes to keep only those large enough to see.
-  var nodes = partition.nodes(json)
+  var nodes = partition.nodes(data)
       .filter(function(d) {
       return (d.dx > 0.005); // 0.005 radians = 0.29 degrees
       });
 
-  var path = vis.data([json]).selectAll("path")
+  var path = vis.data([data]).selectAll("path")
       .data(nodes)
       .enter().append("svg:path")
       .attr("display", function(d) { return d.depth ? null : "none"; })
@@ -221,13 +221,7 @@ function buildPartitionData(allData) {
 // Take an allData object and return an object suitable for
 // d3.stack(). The returned object is a 2-dimensional array of objects that
 // have x, y, y0, weekBegin, weekEnd and category properties.
-function buildStackData(allData) {
-    // There will be a layer for each leaf category.
-    var categories = _.map(getLeaves(allData.categories), function(leaf) {
-        return leaf.name;
-    });
-    categories.unshift("untracked");
-
+function buildStackData(allData, orderedLeafCategories) {
     // Split events crossing midnight into pieces that do not cross midnight.
     var splitEvents = _.flatten(_.map(allData.events, splitEventAtMidnight));
 
@@ -261,7 +255,7 @@ function buildStackData(allData) {
     var layers = [];
     var categToLayer = {};
     var categToSeconds = {};
-    _.each(categories, function(category) {
+    _.each(orderedLeafCategories, function(category) {
         layer = [];
         layers.push(layer);
         categToLayer[category] = layer;
@@ -309,8 +303,21 @@ function main() {
     }
 
     categoryColor = makeColorFunc(data);
-    createSunburst(buildPartitionData(data));
-    createStreamGraph(buildStackData(data));
+
+    // Build sunburst visualization.
+    var partitionData = buildPartitionData(data);
+    createSunburst(partitionData);
+
+    // Build streamgraph visualization.
+    // After createSunburst runs, the nodes in partitionData are ordered by
+    // size. We take advantage of this to display the categories in the
+    // streamgraph in the same order.
+    var orderedLeafCategories = _.map(getLeaves(partitionData), function(leaf) {
+        return leaf.name;
+    });
+    orderedLeafCategories.push("untracked");
+    var stackData = buildStackData(data, orderedLeafCategories);
+    createStreamGraph(stackData);
 }
 
 main();
