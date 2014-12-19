@@ -115,31 +115,6 @@ function createStreamGraph(data) {
     // FIXME: need color of leaf category, but using topLevelScale...
 };
 
-// Return humanized string like "3d5h", "5h3m", "3m5s", or "4s".
-function humanizeSeconds(seconds) {
-  if (seconds > 86400) {
-    return Math.floor(seconds / 86400) + "d" +
-      Math.floor((seconds % 86400) / 3600) + "h";
-  } else if (seconds > 3600) {
-    return Math.floor(seconds / 3600) + "h" +
-      Math.floor((seconds % 3600) / 60) + "m";
-  } else if (seconds > 60) {
-    return Math.floor(seconds / 60) + "m" +
-      Math.floor(seconds % 60) + "s";
-  } else {
-    return Math.floor(seconds) + "s";
-  }
-}
-
-// Return humanized string like "86.3%" or "< 0.1%".
-function humanizePercent(percent) {
-  if (percent < 0.1) {
-    return "< 0.1%";
-  } else {
-    return percent.toPrecision(3) + "%";
-  }
-}
-
 // Fade all but the current sequence.
 function mouseover(d) {
   d3.select("#category").text(d.name);
@@ -229,26 +204,6 @@ function buildPartitionData(allData) {
     return tree;
 }
 
-// Return a deep-copy of the given tree. Only copies the "name" and "children"
-// properties.
-function cloneTree(root) {
-    var copy = {};
-    copy.name = root.name;
-    if (_.has(root, "children")) {
-        copy.children = _.map(root.children, cloneTree);
-    }
-    return copy;
-}
-
-// Return an array containing the leaf nodes in the given tree.
-function getLeaves(root) {
-    if(_.has(root, "children")) {
-        return _.flatten(_.map(root.children, getLeaves));
-    } else {
-        return [root];
-    }
-}
-
 // Take an allData object and return an object suitable for
 // d3.stack(). The returned object is a 2-dimensional array of objects that
 // have x, y, y0, weekBegin, weekEnd and category properties.
@@ -260,29 +215,7 @@ function buildStackData(allData) {
     categories.unshift("untracked");
 
     // Split events crossing midnight into pieces that do not cross midnight.
-    var splitEvents = [];
-    _.each(allData.events, function(evnt) {
-        var begin = evnt.begin;
-        var midnight = begin.clone().hour(0).minute(0).add(1, 'day');
-        while (midnight.isBefore(evnt.end)) {
-            var piece = {
-                "category": evnt.category,
-                "begin": begin,
-                "end": midnight,
-                "comment": evnt.comment,
-            };
-            splitEvents.push(piece);
-            begin = piece.end;
-            midnight.add(1, 'day');
-        }
-        var lastPiece = {
-            "category": evnt.category,
-            "begin": begin,
-            "end": evnt.end,
-            "comment": evnt.comment,
-        };
-        splitEvents.push(lastPiece);
-    });
+    var splitEvents = _.flatten(_.map(allData.events, splitEventAtMidnight));
 
     // Group events into complete days, discarding events at the beginning and
     // end of the data, which might be part of incomplete events.
