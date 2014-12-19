@@ -23,11 +23,7 @@ body {
   height: 70px;
 }
 
-#legend {
-  padding: 10px 0 0 3px;
-}
-
-#sequence text, #legend text {
+#sequence text {
   font-weight: 600;
   fill: #fff;
 }
@@ -40,10 +36,24 @@ body {
   stroke: #fff;
 }
 
+#explanation_total {
+  position: absolute;
+  top: 270px;
+  left: 250px;
+  width: 240px;
+  text-align: center;
+  color: #666;
+  z-index: -1;
+}
+
+#total_time {
+  font-size: 2.5em;
+}
+
 #explanation {
   position: absolute;
-  top: 260px;
-  left: 260px;
+  top: 220px;
+  left: 250px;
   width: 240px;
   text-align: center;
   color: #666;
@@ -62,7 +72,15 @@ body {
   font-size: 2.5em;
 }
 
-#percentage {
+#perc_of_parent {
+  font-size: 2.5em;
+}
+
+#perc_of_total {
+  font-size: 2.5em;
+}
+
+#timespent {
   font-size: 2.5em;
 }
 

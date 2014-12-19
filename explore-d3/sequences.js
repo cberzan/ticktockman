@@ -68,34 +68,61 @@ function createVisualization(json) {
 
   // Get total size of the tree = value of root node from partition.
   totalSize = path.node().__data__.value;
+
+  d3.select("#total_time").text(humanizeSeconds(totalSize));
  };
+
+// Return humanized string like "3d5h", "5h3m", "3m5s", or "4s".
+function humanizeSeconds(seconds) {
+  if (seconds > 86400) {
+    return Math.floor(seconds / 86400) + "d" +
+      Math.floor((seconds % 86400) / 3600) + "h";
+  } else if (seconds > 3600) {
+    return Math.floor(seconds / 3600) + "h" +
+      Math.floor((seconds % 3600) / 60) + "m";
+  } else if (seconds > 60) {
+    return Math.floor(seconds / 60) + "m" +
+      Math.floor(seconds % 60) + "s";
+  } else {
+    return Math.floor(seconds) + "s";
+  }
+}
+
+// Return humanized string like "86.3%" or "< 0.1%".
+function humanizePercent(percent) {
+  if (percent < 0.1) {
+    return "< 0.1%";
+  } else {
+    return percent.toPrecision(3) + "%";
+  }
+}
 
 // Fade all but the current sequence.
 function mouseover(d) {
   d3.select("#category").text(d.name);
 
-  var percentage = (100 * d.value / totalSize).toPrecision(3);
-  var percentageString = percentage + "%";
-  if (percentage < 0.1) {
-    percentageString = "< 0.1%";
+  var percOfParent = 100 * d.value / d.parent.value;
+  var percOfParentStr = humanizePercent(percOfParent);
+  d3.select("#perc_of_parent").text(percOfParentStr);
+
+  var percOfTotal = (100 * d.value / totalSize).toPrecision(3);
+  var percOfTotalStr = percOfTotal + "%";
+  if (percOfTotal < 0.1) {
+    percOfTotalStr = "< 0.1%";
   }
-  d3.select("#percentage").text(percentageString);
+  d3.select("#perc_of_total").text(percOfTotalStr);
+
+  var secondsSpent = d.value;
+  var timeSpentString = humanizeSeconds(secondsSpent);
+  d3.select("#timespent").text(timeSpentString);
 
   var secondsInADay = 86400.0;
   var secondsPerDay = secondsInADay * d.value / totalSize;
-  var perDayString = Math.floor(secondsPerDay) + "s";
-  if (secondsPerDay > 60) {
-    perDayString = Math.floor(secondsPerDay / 60) + "m" +
-      Math.floor(secondsPerDay % 60) + "s";
-  }
-  if (secondsPerDay > 3600) {
-    perDayString = Math.floor(secondsPerDay / 3600) + "h" +
-      Math.floor((secondsPerDay % 3600) / 60) + "m";
-  }
+  var perDayString = humanizeSeconds(secondsPerDay);
   d3.select("#perday").text(perDayString);
 
-  d3.select("#explanation")
-      .style("visibility", "");
+  d3.select("#explanation_total").style("visibility", "hidden");
+  d3.select("#explanation").style("visibility", "");
 
   var sequenceArray = getAncestors(d);
 
@@ -118,8 +145,8 @@ function mouseleave(d) {
   d3.selectAll("path")
       .style("opacity", 1);
 
-  d3.select("#explanation")
-      .style("visibility", "hidden");
+  d3.select("#explanation_total").style("visibility", "");
+  d3.select("#explanation").style("visibility", "hidden");
 }
 
 // Given a node in a partition layout, return an array of all of its ancestor
