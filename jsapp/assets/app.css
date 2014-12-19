@@ -1,0 +1,46 @@
+body {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  background-color: #fff;
+  width: 960px;
+  height: 700px;
+  margin-top: 10px;
+}
+
+#sunburst {
+  position: relative;
+}
+
+#sunburst path {
+  stroke: #fff;
+}
+
+#hud {
+  position: absolute;
+  top: 270px;
+  left: 250px;
+  width: 240px;
+  text-align: center;
+  color: #666;
+  z-index: -1;
+}
+
+#hud_hover {
+  position: absolute;
+  top: 220px;
+  left: 250px;
+  width: 240px;
+  text-align: center;
+  color: #666;
+  z-index: -1;
+}
+
+#hud_lhs {
+  float: left;
+  width: 120px;
+}
+
+#total_time, #category, #perc_of_parent, #perc_of_total, #timespent, #perday {
+  font-size: 2.5em;
+}

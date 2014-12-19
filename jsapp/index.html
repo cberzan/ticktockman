@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Ticktockman</title>
+    <script src="assets/d3/d3.min.js"></script>
+    <script src="assets/moment/moment.min.js"></script>
+    <script src="assets/underscore/underscore-min.js"></script>
+    <link rel="stylesheet" type="text/css"
+      href="https://fonts.googleapis.com/css?family=Open+Sans:400,600">
+    <link rel="stylesheet" type="text/css" href="assets/app.css"/>
+  </head>
+  <body>
+    <div id="main">
+      <div>Ticktockman</div>
+      <div id="sunburst">
+        <div id="hud">
+          <span id="total_time"></span><br/>
+          total time tracked
+        </div>
+        <div id="hud_hover" style="visibility: hidden;">
+          <span id="category"></span><br/>
+          <div id="hud_lhs">
+            <span id="perc_of_parent"></span><br/>
+            of parent<br/>
+            <span id="perc_of_total"></span><br/>
+            of all time<br/>
+          </div>
+          <div id="hud_rhs">
+            <span id="timespent"></span><br/>
+            total<br/>
+            <span id="perday"></span><br/>
+            per day
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="assets/data.js"></script>
+    <script type="text/javascript" src="assets/app.js"></script>
+  </body>
+</html>
