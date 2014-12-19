@@ -43,13 +43,29 @@ body {
 #explanation {
   position: absolute;
   top: 260px;
-  left: 305px;
-  width: 140px;
+  left: 260px;
+  width: 240px;
   text-align: center;
   color: #666;
   z-index: -1;
 }
 
+#explanation_lhs {
+  float: left;
+  width: 120px;
+}
+
+#explanation_rhs {
+}
+
+#category {
+  font-size: 2.5em;
+}
+
 #percentage {
+  font-size: 2.5em;
+}
+
+#perday {
   font-size: 2.5em;
 }
