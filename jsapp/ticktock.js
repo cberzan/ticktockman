@@ -51,6 +51,24 @@ function getLeaves(root) {
     }
 }
 
+// Return an array of root-to-leaf paths in the given tree.
+// All paths are arrays of nodes, from the root to a leaf.
+function getRootToLeafPaths(root) {
+    if(_.has(root, "children")) {
+        var paths = [];
+        _.each(root.children, function(child) {
+            var childPaths = getRootToLeafPaths(child);
+            _.each(childPaths, function(path) {
+                path.unshift(root);
+                paths.push(path);
+            });
+        });
+        return paths;
+    } else {
+        return [[root]];
+    }
+}
+
 // Return true iff the given moment falls at midnight.
 function isMidnight(moment) {
     return (moment.hour() == 0 && moment.minute() == 0);

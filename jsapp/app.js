@@ -5,28 +5,46 @@ var width = 750;
 var height = 600;
 var radius = Math.min(width, height) / 2;
 
-// Color scale for the top-level categories.
-var topLevelScale = d3.scale.category10();
+// Build a color scheme for the categories in the given allData object.
+// Returns a function color that can be called like color(category) or
+// color(category, depth).
+function makeColorFunc(allData) {
+    var topLevelCategs = _.map(allData.categories.children, function(node) {
+        return node.name;
+    });
+    console.log(topLevelCategs);
+    var categToTopLevelCateg = {};
+    _.map(getRootToLeafPaths(allData.categories), function(path) {
+        for (var i = 1; i < path.length; i++) {
+            categToTopLevelCateg[path[i].name] = path[1].name;
+        }
+    });
+    console.log(categToTopLevelCateg);
 
-// Get the color for the given node.
-function color(d) {
-  if (d.depth == 0) {
-    return "#000000";
-  } else if (d.depth == 1) {
-    return categoryColor(d.name);
-  } else {
-    return d3.hsl(color(d.parent)).brighter(0.5).toString();
-    // FIXME: disappears into white for some colors
-  }
+    var hueScale = d3.scale.ordinal()
+        .domain(topLevelCategs)
+        .rangePoints([0, 360], 1);
+    var saturation = 0.5;
+    var lightness = 0.5;
+
+    return function(category, depth) {
+        if (category == "untracked" || category == "root") {
+            return "#000000";
+        }
+        category = categToTopLevelCateg[category];
+        if (depth === undefined) {
+            depth = 1;
+        }
+        var color = d3.hsl(hueScale(category), saturation, lightness);
+        for (var i = 1; i < depth; i++) {
+            color = color.brighter(0.5);
+        }
+        return color.toString();
+    };
 }
 
-function categoryColor(category) {
-    if (category == "untracked") {
-        return "#000000";
-    } else {
-        return topLevelScale(category);
-    }
-}
+// We set this later, after loading the data.
+var categoryColor;
 
 // Total size of all segments; we set this later, after loading the data.
 var totalSize = 0; 
@@ -69,7 +87,7 @@ function createSunburst(json) {
       .attr("display", function(d) { return d.depth ? null : "none"; })
       .attr("d", arc)
       .attr("fill-rule", "evenodd")
-      .style("fill", function(d) { return color(d); })
+      .style("fill", function(d) { return categoryColor(d.name, d.depth); })
       .style("opacity", 1)
       .on("mouseover", mouseover);
 
@@ -94,9 +112,6 @@ function createStreamGraph(data) {
         .domain([0, 604800])
         .range([height, 0]);
 
-    var color2 = d3.scale.linear()
-        .range(["#aad", "#556"]);
-
     var area = d3.svg.area()
         .x(function(d) { return x(d.x); })
         .y0(function(d) { return y(d.y0); })
@@ -114,7 +129,6 @@ function createStreamGraph(data) {
         .enter().append("path")
         .attr("d", area)
         .style("fill", function(d) { return categoryColor(d[0].category); });
-    // FIXME: need color of leaf category, but using topLevelScale...
 };
 
 // Fade all but the current sequence.
@@ -284,8 +298,6 @@ function buildStackData(allData) {
         tallyEvents(days[i], 1, categToSeconds);
         saveWeek();
     }
-    console.log(layers);
-    // throw new Error("STOP");
     return layers;
 }
 
@@ -296,6 +308,7 @@ function main() {
         data.events[i].end = moment(data.events[i].end);
     }
 
+    categoryColor = makeColorFunc(data);
     createSunburst(buildPartitionData(data));
     createStreamGraph(buildStackData(data));
 }
