@@ -69,7 +69,7 @@ function makeSunburst(categories, events, div, color) {
     return sunburst;
 }
 
-// Take an allData object and return an object suitable for
+// Take categories and events and return an object suitable for
 // d3.partition.nodes(). The returned object is a tree of categories that has a
 // "size" property on every leaf. This size is the number of seconds spent in
 // that leaf category.
