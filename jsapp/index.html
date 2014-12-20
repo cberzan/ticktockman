@@ -1,55 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Ticktockman">
+    <meta name="author" content="Constantin Berzan">
+    <link rel="icon" href="favicon.ico">
+
     <title>Ticktockman</title>
-    <script src="thirdparty/d3/d3.min.js"></script>
-    <script src="thirdparty/jquery/jquery-1.11.2.min.js"></script>
-    <script src="thirdparty/moment/moment.min.js"></script>
-    <script src="thirdparty/underscore/underscore-min.js"></script>
+
     <link rel="stylesheet" type="text/css"
       href="https://fonts.googleapis.com/css?family=Open+Sans:400,600">
-    <link rel="stylesheet" type="text/css" href="app.css"/>
+    <link href="thirdparty/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="app.css" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="thirdparty/jquery/jquery-1.11.2.min.js"></script>
+    <script src="thirdparty/bootstrap/js/bootstrap.min.js"></script>
+    <script src="thirdparty/d3/d3.min.js"></script>
+    <script src="thirdparty/moment/moment.min.js"></script>
+    <script src="thirdparty/underscore/underscore-min.js"></script>
   </head>
+
   <body>
-    <div id="main">
-      <div>Ticktockman</div>
 
-      <div id="sunburst_template" class="template">
-        <div class="sunburst">
-          <svg></svg>
-          <div class="hud">
-            <span class="total_time"></span><br/>
-            total time tracked
+    <div id="sunburst_template" class="template">
+      <div class="sunburst">
+        <svg></svg>
+        <div class="hud">
+          <span class="total_time"></span><br/>
+          total time tracked
+        </div>
+        <div class="hud_hover">
+          <span class="category"></span><br/>
+          <div class="hud_lhs">
+            <span class="perc_of_parent"></span><br/>
+            of parent<br/>
+            <span class="perc_of_total"></span><br/>
+            of all time<br/>
           </div>
-          <div class="hud_hover">
-            <span class="category"></span><br/>
-            <div class="hud_lhs">
-              <span class="perc_of_parent"></span><br/>
-              of parent<br/>
-              <span class="perc_of_total"></span><br/>
-              of all time<br/>
-            </div>
-            <div class="hud_rhs">
-              <span class="timespent"></span><br/>
-              total<br/>
-              <span class="perday"></span><br/>
-              per day
-            </div>
+          <div class="hud_rhs">
+            <span class="timespent"></span><br/>
+            total<br/>
+            <span class="perday"></span><br/>
+            per day
           </div>
         </div>
       </div>
-
-      <div id="streamgraph_template" class="template">
-        <div class="streamgraph">
-          <svg></svg>
-        </div>
-      </div>
-
-      <div id="sunburst_all"></div>
-      <div id="streamgraph_all"></div>
-
     </div>
+
+    <div id="streamgraph_template" class="template">
+      <div class="streamgraph">
+        <svg></svg>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation"><a href="TODO">view project on GitHub</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Ticktockman</h3>
+      </div>
+
+      <div class="jumbotron">
+        <h1>Where is your time going?</h1>
+        <p class="lead">
+          Ticktockman visualizes time-tracking data. An example dataset is
+          already loaded, so just scroll down explore! Or <a href="TODO">learn
+          how to format</a> your own time-tracking data for use with
+          Ticktockman.
+        </p>
+        <p><a class="btn btn-lg btn-success" href="#" role="button">I want to load my own data!</a></p>
+      </div>
+
+      <div class="row">
+        <h1>The data</h1>
+        <p>bla bla</p>
+
+        <h1>Where all the time went</h1>
+        <p>
+          Hover over a section of the chart to see how much time you spent on
+          that particular activity.<br>
+          Click on a section of the chart to see all instances of that activity.
+        </p>
+        <div id="sunburst_all"></div>
+
+        <h1>Changes from week to week</h1>
+        <p>bla bla</p>
+        <div id="streamgraph_all"></div>
+
+      </div>
+
+      <footer class="footer">
+        <p>
+          Built by <a href="http://thirld.com/">Constantin Berzan</a> in 2014
+          using Mike Bostock's <a href="http://d3js.org/">D3.js</a>. Find the
+          source <a href="TODO">on GitHub</a>.
+        </p>
+      </footer>
+
+    </div> <!-- /container -->
+
     <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="ticktock.js"></script>
     <script type="text/javascript" src="sunburst.js"></script>
