@@ -11,8 +11,8 @@ function makeStreamgraph(
     // V is the visualization object that we will return.
     var V = {};
     V.div = d3.select(div[0]);
-    V.width = 1300;
-    V.height = 400;
+    V.width = 730;
+    V.height = 500;
     V.stackData = buildStackData(orderedLeafCategories, events);
 
     V.x = d3.scale.linear()
@@ -38,7 +38,11 @@ function makeStreamgraph(
         .data(V.layers)
         .enter().append("path")
         .attr("d", V.area)
-        .style("fill", function(d) { return categoryColor(d[0].category); });
+        .style("fill", function(d) { return categoryColor(d[0].category); })
+        .on("mouseover", function(d) { streamgraphMouseover(V, d); })
+        .on("mousemove", function(d) { streamgraphMousemove(V, d); });
+
+    V.svg.on("mouseleave", function() { streamgraphMouseleave(V); });
 
     return V;
 }
@@ -118,4 +122,37 @@ function buildStackData(orderedLeafCategories, events) {
         saveWeek();
     }
     return layers;
+}
+
+// Update HUD.
+function streamgraphMousemove(V, d) {
+    var position = d3.mouse(V.svg.node());
+    var weekIndex = Math.round(V.x.invert(position[0]));
+    weekIndex = Math.max(weekIndex, 0);
+    weekIndex = Math.min(weekIndex, d.length - 1);
+    var datum = d[weekIndex];
+    V.div.select(".timespent").text(humanizeSeconds(datum.y));
+    V.div.select(".perday").text(humanizeSeconds(datum.y / 7.0));
+    V.div.select(".week_begin").text(datum.weekBegin.format("YYYY MMM D"));
+    V.div.select(".week_end").text(datum.weekEnd.format("YYYY MMM D"));
+}
+
+// Fade all layers except the one hovered over.
+function streamgraphMouseover(V, d) {
+    V.svg.selectAll("path")
+        .style("opacity", 0.3);
+
+    V.svg.selectAll("path")
+        .filter(function(node) { return node[0].category == d[0].category; })
+        .style("opacity", 1);
+
+    V.div.select(".category").text(d[0].category);
+    V.div.select(".hud_hover").style("visibility", "visible");
+}
+
+// Unfade all layers.
+function streamgraphMouseleave(V) {
+    V.svg.selectAll("path")
+        .style("opacity", 1);
+    V.div.select(".hud_hover").style("visibility", "hidden");
 }

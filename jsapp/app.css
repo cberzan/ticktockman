@@ -95,7 +95,7 @@ body {
   stroke: #fff;
 }
 
-.hud {
+.sunburst .hud {
   position: absolute;
   top: 270px;
   left: 250px;
@@ -105,7 +105,7 @@ body {
   z-index: -1;
 }
 
-.hud_hover {
+.sunburst .hud_hover {
   visibility: hidden;
   position: absolute;
   top: 220px;
@@ -116,11 +116,20 @@ body {
   z-index: -1;
 }
 
-.hud_lhs {
+.sunburst .hud_lhs {
   float: left;
   width: 120px;
 }
 
-.total_time, .category, .perc_of_parent, .perc_of_total, .timespent, .perday {
+.sunburst .total_time,
+.sunburst .category,
+.sunburst .perc_of_parent,
+.sunburst .perc_of_total,
+.sunburst .timespent,
+.sunburst .perday {
   font-size: 2em;
+}
+
+.streamgraph .hud_hover {
+  visibility: hidden;
 }

@@ -10,7 +10,7 @@ function makeSunburst(categories, events, div, color) {
     sunburst.div = d3.select(div[0]);
 
     // Dimensions.
-    sunburst.width = 750;
+    sunburst.width = 730;
     sunburst.height = 600;
     sunburst.radius = 300;
 
@@ -55,11 +55,11 @@ function makeSunburst(categories, events, div, color) {
         .attr("fill-rule", "evenodd")
         .style("fill", function(d) { return color(d.name, d.depth); })
         .style("opacity", 1)
-        .on("mouseover", function(d) { mouseover(sunburst, d); });
+        .on("mouseover", function(d) { sunburstMouseover(sunburst, d); });
 
     // Add the mouseleave handler to the bounding circle.
     sunburst.div.select(".container").on("mouseleave",
-        function(d) { mouseleave(sunburst, d); });
+        function(d) { sunburstMouseleave(sunburst, d); });
 
     // Total size (total number of seconds tracked).
     sunburst.totalSize = sunburst.path.node().__data__.value;
@@ -94,7 +94,7 @@ function buildPartitionData(categories, events) {
 }
 
 // Fade all but the current sequence.
-function mouseover(sunburst, d) {
+function sunburstMouseover(sunburst, d) {
   sunburst.div.select(".category").text(d.name);
 
   var percOfParent = 100 * d.value / d.parent.value;
@@ -135,7 +135,7 @@ function mouseover(sunburst, d) {
 }
 
 // Restore everything to full opacity when moving off the visualization.
-function mouseleave(sunburst, d) {
+function sunburstMouseleave(sunburst, d) {
 
   // Set each segment to full opacity.
   sunburst.container.selectAll("path")
