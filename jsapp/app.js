@@ -49,28 +49,22 @@ function main() {
     var categoryColor = makeColorFunc(data.categories);
 
     // Build sunburst visualization.
-    var sunburst1 = makeSunburst(
+    var sunburstAll = makeSunburst(
         data.categories, data.events,
-        $("#sunburst1"), categoryColor);
-    var sunburst2 = makeSunburst(
-        data.categories, data.events,
-        $("#sunburst2"), categoryColor);
+        $("#sunburst_all"), categoryColor);
 
     // After createSunburst runs, the nodes in partitionData are ordered by
     // size. We take advantage of this to display the categories in the
     // streamgraph in the same order.
     var orderedLeafCategories = _.map(
-        getLeaves(sunburst1.partitionData),
+        getLeaves(sunburstAll.partitionData),
         function(leaf) { return leaf.name; });
     orderedLeafCategories.push("untracked");
 
     // Build streamgraph visualization.
-    var streamgraph1 = makeStreamgraph(
+    var streamgraphAll = makeStreamgraph(
         data.categories, data.events,
-        $("#streamgraph1"), orderedLeafCategories, categoryColor);
-    var streamgraph2 = makeStreamgraph(
-        data.categories, data.events,
-        $("#streamgraph2"), orderedLeafCategories, categoryColor);
+        $("#streamgraph_all"), orderedLeafCategories, categoryColor);
 }
 
 main();
