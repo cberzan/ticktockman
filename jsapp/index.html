@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>Ticktockman</title>
     <script src="thirdparty/d3/d3.min.js"></script>
+    <script src="thirdparty/jquery/jquery-1.11.2.min.js"></script>
     <script src="thirdparty/moment/moment.min.js"></script>
     <script src="thirdparty/underscore/underscore-min.js"></script>
     <link rel="stylesheet" type="text/css"
@@ -14,28 +15,33 @@
     <div id="main">
       <div>Ticktockman</div>
 
-      <div id="sunburst">
-        Sunburst
-        <div id="hud">
-          <span id="total_time"></span><br/>
-          total time tracked
-        </div>
-        <div id="hud_hover" style="visibility: hidden;">
-          <span id="category"></span><br/>
-          <div id="hud_lhs">
-            <span id="perc_of_parent"></span><br/>
-            of parent<br/>
-            <span id="perc_of_total"></span><br/>
-            of all time<br/>
+      <div id="sunburst_template" class="template">
+        <div class="sunburst">
+          <svg></svg>
+          <div class="hud">
+            <span class="total_time"></span><br/>
+            total time tracked
           </div>
-          <div id="hud_rhs">
-            <span id="timespent"></span><br/>
-            total<br/>
-            <span id="perday"></span><br/>
-            per day
+          <div class="hud_hover">
+            <span class="category"></span><br/>
+            <div class="hud_lhs">
+              <span class="perc_of_parent"></span><br/>
+              of parent<br/>
+              <span class="perc_of_total"></span><br/>
+              of all time<br/>
+            </div>
+            <div class="hud_rhs">
+              <span class="timespent"></span><br/>
+              total<br/>
+              <span class="perday"></span><br/>
+              per day
+            </div>
           </div>
         </div>
       </div>
+
+      <div id="sunburst1"></div>
+      <div id="sunburst2"></div>
 
       <div id="streamgraph">
         StreamGraph
@@ -44,6 +50,7 @@
     </div>
     <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="ticktock.js"></script>
+    <script type="text/javascript" src="sunburst.js"></script>
     <script type="text/javascript" src="app.js"></script>
   </body>
 </html>

@@ -8,15 +8,19 @@ body {
   margin-top: 10px;
 }
 
-#sunburst {
+.template {
+  display: none;
+}
+
+.sunburst {
   position: relative;
 }
 
-#sunburst path {
+.sunburst path {
   stroke: #fff;
 }
 
-#hud {
+.hud {
   position: absolute;
   top: 270px;
   left: 250px;
@@ -26,7 +30,8 @@ body {
   z-index: -1;
 }
 
-#hud_hover {
+.hud_hover {
+  visibility: hidden;
   position: absolute;
   top: 220px;
   left: 250px;
@@ -36,11 +41,11 @@ body {
   z-index: -1;
 }
 
-#hud_lhs {
+.hud_lhs {
   float: left;
   width: 120px;
 }
 
-#total_time, #category, #perc_of_parent, #perc_of_total, #timespent, #perday {
+.total_time, .category, .perc_of_parent, .perc_of_total, .timespent, .perday {
   font-size: 2.5em;
 }
