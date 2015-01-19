@@ -9,8 +9,9 @@ function makeEachday(categories, days, div, color) {
     // V is the visualization object that we will return.
     var V = {};
     V.div = d3.select(div[0]);
-    V.width = 730;
-    V.height = days.length * 20;
+    V.margin = {top: 0, right: 0, bottom: 0, left: 90};
+    V.width = 730 - V.margin.left - V.margin.right;
+    V.height = days.length * 20 - V.margin.top - V.margin.bottom;
 
     // Fill in the description text.
     V.div.select(".num_days").text(days.length);
@@ -54,8 +55,11 @@ function makeEachday(categories, days, div, color) {
 
     // Init svg.
     V.svg = V.div.select("svg")
-        .attr("width", V.width)
-        .attr("height", V.height);
+        .attr("width", V.width + V.margin.left + V.margin.right)
+        .attr("height", V.height + V.margin.top + V.margin.bottom)
+      .append("g")
+        .attr("transform",
+            "translate(" + V.margin.left + "," + V.margin.top + ")");
 
     // Each day becomes a row, which is a <g> element.
     V.days = V.svg.selectAll(".day")
@@ -75,6 +79,19 @@ function makeEachday(categories, days, div, color) {
         .attr("width", function(d) { return V.x(d.endSec) - V.x(d.beginSec); })
         .style("fill", function(d) { return color(d.category); });
 
+    // Add an y axis showing the date.
+    V.yAxis = d3.svg.axis()
+        .scale(V.y)
+        .tickSize(0)
+        .tickPadding(6)
+        .tickFormat(function(i) {
+            return V.data[i].date.format("YYYY MMM D");
+        })
+        .orient("left");
+    V.svg.append("g")
+        .attr("class", "y axis")
+        // .attr("transform", "translate(0," + height + ")")
+        .call(V.yAxis);
 
     return V;
 }
