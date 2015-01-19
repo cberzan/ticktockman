@@ -87,6 +87,12 @@ body {
   display: none;
 }
 
+.eachday .xaxis path, .eachday .xaxis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
 .sunburst {
   position: relative;
 }

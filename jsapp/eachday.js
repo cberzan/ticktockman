@@ -9,7 +9,7 @@ function makeEachday(categories, days, div, color) {
     // V is the visualization object that we will return.
     var V = {};
     V.div = d3.select(div[0]);
-    V.margin = {top: 0, right: 0, bottom: 0, left: 90};
+    V.margin = {top: 0, right: 20, bottom: 40, left: 90};
     V.width = 730 - V.margin.left - V.margin.right;
     V.height = days.length * 20 - V.margin.top - V.margin.bottom;
 
@@ -79,6 +79,23 @@ function makeEachday(categories, days, div, color) {
         .attr("width", function(d) { return V.x(d.endSec) - V.x(d.beginSec); })
         .style("fill", function(d) { return color(d.category); });
 
+    // Add an x axis showing the time of day.
+    V.xAxis = d3.svg.axis()
+        .scale(V.x)
+        // .tickPadding(6)
+        .tickValues(_.map([0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24],
+            function(hour) { return hour * 60 * 60; }))
+        .tickFormat(function(seconds) {
+            var duration = moment.duration(seconds, 'seconds');
+            return (duration.hours() + ":"
+                + d3.format("02d")(duration.minutes()));
+        })
+        .orient("bottomk");
+    V.svg.append("g")
+        .attr("class", "xaxis")
+        .attr("transform", "translate(0," + V.height + ")")
+        .call(V.xAxis);
+
     // Add an y axis showing the date.
     V.yAxis = d3.svg.axis()
         .scale(V.y)
@@ -89,8 +106,7 @@ function makeEachday(categories, days, div, color) {
         })
         .orient("left");
     V.svg.append("g")
-        .attr("class", "y axis")
-        // .attr("transform", "translate(0," + height + ")")
+        .attr("class", "yaxis")
         .call(V.yAxis);
 
     return V;
