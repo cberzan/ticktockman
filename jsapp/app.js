@@ -48,6 +48,58 @@ function main() {
     // Build color scheme.
     var categoryColor = makeColorFunc(data.categories);
 
+    // Split events at midnight, and group events into days.
+    var splitEvents = _.flatten(_.map(data.events, splitEventAtMidnight));
+    var days = groupEventsIntoDays(splitEvents);
+
+    // Pad incomplete days so that each day covers exactly 24h,
+    // from midnight to midnight.
+    if (days.length > 0) {
+        var firstEvent = _.first(_.first(days));
+        if (!isMidnight(firstEvent.begin)) {
+            _.first(days).unshift({
+                "category": "untracked",
+                "begin": firstEvent.begin.clone().hour(0).minute(0),
+                "end": firstEvent.begin.clone(),
+            });
+        }
+        var lastEvent = _.last(_.last(days));
+        if (!isMidnight(lastEvent.end)) {
+            _.last(days).push({
+                "category": "untracked",
+                "begin": lastEvent.end.clone(),
+                "end": lastEvent.end.clone().hour(0).minute(0).add(1, 'day'),
+            });
+        }
+    }
+
+    // Sanity check days.
+    _.each(days, function(day) {
+        // The day's events must cover a 24h stretch from midnight to midnight.
+        assert(day.length > 0);
+        assert(isMidnight(_.first(day).begin));
+        assert(isMidnight(_.last(day).end));
+
+        // The events in the day must add up to a full day.
+        var totalSeconds = _.reduce(day, function(memo, evnt) {
+            assert(durationSeconds(evnt) >= 0);
+            return memo + durationSeconds(evnt);
+        }, 0);
+        // TODO: unit test for this DST logic
+        var targetSeconds = secondsInADay;
+        if (_.first(day).begin.isDST() && !_.last(day).end.isDST()) {
+            targetSeconds += 60 * 60;
+        } else if (!_.first(day).begin.isDST() && _.last(day).end.isDST()) {
+            targetSeconds -= 60 * 60;
+        }
+        assert(totalSeconds == targetSeconds);
+    });
+
+    // Build each-day visualization.
+    var eachday = makeEachday(
+        data.categories, days,
+        $("#eachday"), categoryColor);
+
     // Build sunburst visualization.
     var sunburstAll = makeSunburst(
         data.categories, data.events,
@@ -61,10 +113,12 @@ function main() {
         function(leaf) { return leaf.name; });
     orderedLeafCategories.push("untracked");
 
+    /*
     // Build streamgraph visualization.
     var streamgraphAll = makeStreamgraph(
-        data.categories, data.events,
+        data.categories, days,
         $("#streamgraph_all"), orderedLeafCategories, categoryColor);
+    */
 }
 
 main();

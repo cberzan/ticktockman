@@ -29,6 +29,17 @@
 
   <body>
 
+    <div id="eachday_template" class="template">
+      <div class="eachday">
+        <p>
+          The dataset contains <span class="num_days"></span> days, from <span
+          class="first_date"></span> to <span class="last_date"></span>. Click
+          on a day to see it in detail.
+        </p>
+        <svg></svg>
+      </div>
+    </div>
+
     <div id="sunburst_template" class="template">
       <div class="sunburst">
         <svg></svg>
@@ -81,16 +92,16 @@
         <h1>Where is your time going?</h1>
         <p class="lead">
           Ticktockman visualizes time-tracking data. An example dataset is
-          already loaded, so just scroll down explore! Or <a href="TODO">learn
-          how to format</a> your own time-tracking data for use with
-          Ticktockman.
+          already loaded, so just scroll down and explore! Or <a
+          href="TODO">learn how to format</a> your own time-tracking data for
+          use with Ticktockman.
         </p>
         <p><a class="btn btn-lg btn-success" href="#" role="button">I want to load my own data!</a></p>
       </div>
 
       <div class="row">
-        <h1>The data</h1>
-        <p>bla bla</p>
+        <h1>Individual days</h1>
+        <div id="eachday"></div>
 
         <h1>Where all the time went</h1>
         <p>
@@ -118,6 +129,7 @@
 
     <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="ticktock.js"></script>
+    <script type="text/javascript" src="eachday.js"></script>
     <script type="text/javascript" src="sunburst.js"></script>
     <script type="text/javascript" src="streamgraph.js"></script>
     <script type="text/javascript" src="app.js"></script>
