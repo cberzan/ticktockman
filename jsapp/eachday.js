@@ -111,3 +111,11 @@ function makeEachday(categories, days, div, color) {
 
     return V;
 }
+
+// LEFT TODO:
+// - show day of week on y axis
+// - legend showing top-level categories (make svg reusable, so I can use it
+//   for the other plots too)
+// - add vertical scrollbar, so that legend and x axis are always visible
+// - tooltip with info on hover
+// - modal showing the day's events in detail
