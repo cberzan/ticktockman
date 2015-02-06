@@ -99,6 +99,7 @@ function main() {
     var eachday = makeEachday(
         data.categories, days,
         $("#eachday"), categoryColor);
+    window.eachday = eachday;  // DEBUG
 
     // Build sunburst visualization.
     var sunburstAll = makeSunburst(

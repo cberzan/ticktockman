@@ -87,6 +87,17 @@ body {
   display: none;
 }
 
+.eachday div.vscroll {
+  height: 400px;
+  resize: vertical;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.eachday svg.footer {
+  padding-top: 5px;
+}
+
 .eachday .xaxis path, .eachday .xaxis line {
   fill: none;
   stroke: #000;
