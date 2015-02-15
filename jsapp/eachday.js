@@ -9,7 +9,7 @@ function makeEachday(categories, days, div, color) {
     // V is the visualization object that we will return.
     var V = {};
     V.div = d3.select(div[0]);
-    V.main_margin = {top: 0, right: 20, bottom: 0, left: 90};
+    V.main_margin = {top: 0, right: 20, bottom: 0, left: 120};
     V.main_width = 720 - V.main_margin.left - V.main_margin.right;
     V.main_height = days.length * 20;
     V.footer_margin = {top: 0, right: 20, bottom: 0, left: 90};
@@ -116,7 +116,7 @@ function makeEachday(categories, days, div, color) {
         .tickSize(0)
         .tickPadding(6)
         .tickFormat(function(i) {
-            return V.data[i].date.format("YYYY MMM D");
+            return V.data[i].date.format("ddd YYYY MMM D");
         })
         .orient("left");
     V.svg_main.append("g")
@@ -127,7 +127,6 @@ function makeEachday(categories, days, div, color) {
 }
 
 // LEFT TODO:
-// - show day of week on y axis
 // - legend showing top-level categories (make svg reusable, so I can use it
 //   for the other plots too)
 // - tooltip with info on hover
