@@ -1,55 +1,72 @@
 var secondsInADay = 86400.0;
 
-// Build a color scheme for the given tree of categories.
-// Returns a function color that can be called like color(category) or
-// color(category, depth).
-function makeColorFunc(categories) {
-    var topLevelCategs = _.map(categories.children, function(node) {
-        return node.name;
+// Helper for createColors(): recursively set the colors for the given node.
+function assignColors(node, color) {
+    node.color = color;
+    var childColor = color.brighter(0.5);
+    _.each(node.children, function(child) {
+        assignColors(child, childColor);
     });
-    console.log(topLevelCategs);
-    var categToTopLevelCateg = {};
-    _.map(getRootToLeafPaths(categories), function(path) {
-        for (var i = 1; i < path.length; i++) {
-            categToTopLevelCateg[path[i].name] = path[1].name;
+}
+
+// Build color scheme, augmenting each category with a "color" key.
+function createColors(categories) {
+    var topLevelCategoryIds = [];
+    _.each(categories.root.children, function(node) {
+        if (node.label != "untracked") {
+            topLevelCategoryIds.push(node.id);
         }
     });
-    console.log(categToTopLevelCateg);
-
     var hueScale = d3.scale.ordinal()
-        .domain(topLevelCategs)
+        .domain(topLevelCategoryIds)
         .rangePoints([0, 360], 1);
     var saturation = 0.5;
     var lightness = 0.5;
-
-    return function(category, depth) {
-        if (category == "untracked" || category == "root") {
-            return "#000000";
+    _.each(categories.root.children, function(node) {
+        var color = d3.hsl(0, 0, 0);
+        if (node.name != "untracked") {
+            color = d3.hsl(hueScale(node.id), saturation, lightness);
         }
-        category = categToTopLevelCateg[category];
-        if (depth === undefined) {
-            depth = 1;
-        }
-        var color = d3.hsl(hueScale(category), saturation, lightness);
-        for (var i = 1; i < depth; i++) {
-            color = color.brighter(0.5);
-        }
-        return color.toString();
-    };
+        assignColors(node, color);
+    });
 }
 
 function main() {
+    events = data;
+
     // Parse ISO-8601 datetimes into Moment objects.
-    for (var i = 0; i < data.events.length; i++) {
-        data.events[i].begin = moment(data.events[i].begin);
-        data.events[i].end = moment(data.events[i].end);
+    for (var i = 0; i < events.length; i++) {
+        events[i].begin = moment(events[i].begin);
+        events[i].end = moment(events[i].end);
     }
 
-    // Build color scheme.
-    var categoryColor = makeColorFunc(data.categories);
+    // Build categories data structure, and set the category for each event.
+    // categories.root = {"id": 1, "name": "root", children: {...}}
+    // Invariant: node.children[name].name == name.
+    // categories.list = [null, {"id": 1, ...}, {"id": 2, ...}, ...]
+    // Invariant: categories.list[id].id == id.
+    var rootCateg = {"id": 0, "name": "root", "children": {}};
+    var categories = {'root': rootCateg, 'list': [rootCateg]};
+    var nextId = 1;
+    _.each(events, function(evnt) {
+        // Traverse category path, adding missing categories along the way.
+        var curNode = categories.root;
+        _.each(evnt.category, function(crumb) {
+            if (!_.has(curNode.children, crumb)) {
+                var newCateg = {"id": nextId, "name": crumb, "children": {}};
+                curNode.children[crumb] = newCateg;
+                categories.list.push(newCateg);
+                nextId++;
+            }
+            curNode = curNode.children[crumb];
+        });
+        // Set the event's category to the rich object just found / created.
+        evnt.category = curNode;
+    });
+    createColors(categories);
 
     // Split events at midnight, and group events into days.
-    var splitEvents = _.flatten(_.map(data.events, splitEventAtMidnight));
+    var splitEvents = _.flatten(_.map(events, splitEventAtMidnight));
     var days = groupEventsIntoDays(splitEvents);
 
     // Pad incomplete days so that each day covers exactly 24h,
@@ -96,11 +113,10 @@ function main() {
     });
 
     // Build each-day visualization.
-    var eachday = makeEachday(
-        data.categories, days,
-        $("#eachday"), categoryColor);
+    var eachday = makeEachday(days, $("#eachday"));
     window.eachday = eachday;  // DEBUG
 
+    /*
     // Build sunburst visualization.
     var sunburstAll = makeSunburst(
         data.categories, data.events,
@@ -113,6 +129,7 @@ function main() {
         getLeaves(sunburstAll.partitionData),
         function(leaf) { return leaf.name; });
     orderedLeafCategories.push("untracked");
+    */
 
     /*
     // Build streamgraph visualization.

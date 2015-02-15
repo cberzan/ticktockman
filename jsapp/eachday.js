@@ -1,7 +1,6 @@
 // Build an eachday visualization of the given days in the given div.
 // Div must be a jQuery selector. The div will be emptied.
-// Color will be called like this: color(leaf_category).
-function makeEachday(categories, days, div, color) {
+function makeEachday(days, div) {
     // Copy skeleton from the template.
     div.empty();
     div.append($("#eachday_template").children().clone());
@@ -83,7 +82,7 @@ function makeEachday(categories, days, div, color) {
         .attr("height", V.y.rangeBand())
         .attr("x", function(d) { return V.x(d.beginSec); })
         .attr("width", function(d) { return V.x(d.endSec) - V.x(d.beginSec); })
-        .style("fill", function(d) { return color(d.category); });
+        .style("fill", function(d) { return d.category.color; });
 
     // Add a footer with an x axis showing the time of day.
     // FIXME: margin etc not DRY
