@@ -11,7 +11,7 @@ function makeEachday(days, div) {
     V.main_margin = {top: 0, right: 20, bottom: 0, left: 120};
     V.main_width = 720 - V.main_margin.left - V.main_margin.right;
     V.main_height = days.length * 20;
-    V.footer_margin = {top: 0, right: 20, bottom: 0, left: 90};
+    V.footer_margin = {top: 0, right: 20, bottom: 0, left: 120};
     V.footer_width = V.main_width;
     V.footer_height = 40;
 
