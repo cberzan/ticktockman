@@ -3,6 +3,7 @@
 from collections import defaultdict
 from datetime import timedelta
 import argparse
+import itertools
 import json
 
 from events import Event
@@ -58,11 +59,31 @@ if __name__ == "__main__":
     print_time_tree(time_tree)
 
     # Write out JSON in a format suitable for D3.
+    # We have to output full category paths, e.g. ['work', 'research',
+    # 'reading_papers'] instead of just the leaf category 'reading_papers'.
+    def func(node, child_results):
+        paths = list(itertools.chain(*child_results))
+        if node.label == 'root':
+            # Omit 'root' as the first element.
+            return paths
+        elif not child_results:
+            # Base case.
+            return [[node.label]]
+        else:
+            new_paths = []
+            for path in paths:
+                new_paths.append([node.label] + path)
+            return new_paths
+    leaf_categ_to_categ_path = {'untracked': ['untracked']}
+    for path in onto_tree.transform(func):
+        assert path[-1] not in leaf_categ_to_categ_path
+        leaf_categ_to_categ_path[path[-1]] = path
+
     def event_to_dict(event):
         data = {
             'begin': event.begin.isoformat(),
             'end': event.end.isoformat(),
-            'category': event.category,
+            'category': leaf_categ_to_categ_path[event.category],
         }
         if event.comment:
             data['comment'] = event.comment
@@ -79,15 +100,5 @@ if __name__ == "__main__":
             event_dicts.append(event_to_dict(event))
         for event in segment:
             event_dicts.append(event_to_dict(event))
-
-    def func(node, child_results):
-        data = {'name': node.label}
-        if node.children:
-            data['children'] = child_results
-        return data
-    data = {
-        'categories': onto_tree.transform(func),
-        'events': event_dicts,
-    }
     with open("out.json", "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(event_dicts, f, indent=4)
