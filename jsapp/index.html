@@ -29,6 +29,12 @@
 
   <body>
 
+    <div id="legend_template" class="template">
+      <div class="legend">
+        <svg></svg>
+      </div>
+    </div>
+
     <div id="eachday_template" class="template">
       <div class="eachday">
         <p>
@@ -104,6 +110,7 @@
 
       <div class="row">
         <h1>Individual days</h1>
+        <div id="eachday_legend"></div>
         <div id="eachday"></div>
 
         <h1>Where all the time went</h1>
@@ -132,6 +139,7 @@
 
     <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="ticktock.js"></script>
+    <script type="text/javascript" src="legend.js"></script>
     <script type="text/javascript" src="eachday.js"></script>
     <script type="text/javascript" src="sunburst.js"></script>
     <script type="text/javascript" src="streamgraph.js"></script>

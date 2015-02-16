@@ -89,6 +89,7 @@ function main() {
             });
         }
     }
+    // FIXME: above needs to use real untracked category, not just the string.
 
     // Sanity check days.
     _.each(days, function(day) {
@@ -113,6 +114,8 @@ function main() {
     });
 
     // Build each-day visualization.
+    var eachdayLegend = makeLegend(categories, $("#eachday_legend"));
+    window.legend = eachdayLegend;  // DEBUG
     var eachday = makeEachday(days, $("#eachday"));
     window.eachday = eachday;  // DEBUG
 
