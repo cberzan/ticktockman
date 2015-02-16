@@ -1,16 +1,17 @@
 // Build an eachday visualization of the given days in the given div.
-// Div must be a jQuery selector. The div will be emptied.
-function makeEachday(categories, days, div) {
+// jqDiv must be a jQuery selector. The div will be emptied.
+function makeEachday(categories, days, jqDiv) {
     // V is the visualization object that we will return.
     var V = {};
-    V.div = d3.select(div[0]);
+    V.jqDiv = jqDiv;
+    V.d3Div = d3.select(jqDiv[0]);
 
     // Copy skeleton from the template.
-    div.empty();
-    div.append($("#eachday_template").children().clone());
+    jqDiv.empty();
+    jqDiv.append($("#eachday_template").children().clone());
 
     // Build legend.
-    legendDiv = div.find("div.legend_container");
+    legendDiv = jqDiv.find("div.legend_container");
     V.legend = makeLegend(categories, legendDiv);
 
     // Dimensions.
@@ -25,23 +26,25 @@ function makeEachday(categories, days, div) {
     V.input_days = days;
 
     // Fill in the description text.
-    V.div.select(".num_days").text(days.length);
-    V.div.select(".first_date").text(
+    V.d3Div.select(".num_days").text(days.length);
+    V.d3Div.select(".first_date").text(
         days[0][0].begin.format("YYYY MMM D"));
-    V.div.select(".last_date").text(
+    V.d3Div.select(".last_date").text(
         days[days.length - 1][0].end.format("YYYY MMM D"));
 
     // Build the data for the visualization.
     // V.data is an array of days. Each day is an object with the following
     // properties: index, date, events. Each event is an object with the
-    // following properties: beginSec, endSec, category.
+    // following properties: begin, beginSec, end, endSec, category.
     var index = -1;
     V.data = _.map(days, function(events) {
         // Convert events to the required format.
         var dayBegin = events[0].begin;
         var convertedEvents = _.map(events, function(evnt) {
             return {
+                'begin': evnt.begin,
                 'beginSec': evnt.begin.diff(dayBegin, 'seconds'),
+                'end': evnt.end,
                 'endSec': evnt.end.diff(dayBegin, 'seconds'),
                 'category': evnt.category,
             };
@@ -65,7 +68,7 @@ function makeEachday(categories, days, div) {
         .rangeRoundBands([0, V.main_height], .08, 0);
 
     // Init svg.
-    V.svg_main = V.div.select("svg.main")
+    V.svg_main = V.d3Div.select("svg.main")
         .attr("width", V.main_width + V.main_margin.left + V.main_margin.right)
         .attr("height", V.main_height + V.main_margin.top + V.main_margin.bottom)
       .append("g")
@@ -79,7 +82,8 @@ function makeEachday(categories, days, div) {
         .attr("class", "g")
         .attr("transform", function(d) {
             return "translate(0, " + V.y(d.index) + ")";
-        });
+        })
+        .on("click", function(d) { showDayModal(V, d); });
 
     // Each event becomes a rectangle within that day's row.
     V.days.selectAll("rect")
@@ -92,7 +96,7 @@ function makeEachday(categories, days, div) {
 
     // Add a footer with an x axis showing the time of day.
     // FIXME: margin etc not DRY
-    V.svg_footer = V.div.select("svg.footer")
+    V.svg_footer = V.d3Div.select("svg.footer")
         .attr("width",
             V.footer_width + V.footer_margin.left + V.footer_margin.right)
         .attr("height",
@@ -131,6 +135,11 @@ function makeEachday(categories, days, div) {
     return V;
 }
 
+function showDayModal(V, day) {
+    var modalDiv = $(V.jqDiv).find(".modal");
+    V.oneday = makeOneday(day, modalDiv);
+    modalDiv.modal("show");
+}
+
 // LEFT TODO:
 // - tooltip with info on hover
-// - modal showing the day's events in detail

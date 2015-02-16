@@ -104,6 +104,12 @@ body {
   shape-rendering: crispEdges;
 }
 
+.eachday .modal .modal-body {
+  max-height: 420px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 .sunburst {
   position: relative;
 }

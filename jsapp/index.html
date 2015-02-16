@@ -47,6 +47,24 @@
           <svg class="main"></svg>
         </div>
         <svg class="footer"></svg>
+        <!-- Modal for showing a day's data in detail. -->
+        <!-- FIXME: id="myModalLabel" is global -->
+        <div class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel"></h4>
+              </div>
+              <div class="modal-body">
+                <svg class="inmodal"></svg>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -140,6 +158,7 @@
     <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="ticktock.js"></script>
     <script type="text/javascript" src="legend.js"></script>
+    <script type="text/javascript" src="oneday.js"></script>
     <script type="text/javascript" src="eachday.js"></script>
     <script type="text/javascript" src="sunburst.js"></script>
     <script type="text/javascript" src="streamgraph.js"></script>
