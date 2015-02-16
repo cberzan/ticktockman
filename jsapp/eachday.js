@@ -1,13 +1,19 @@
 // Build an eachday visualization of the given days in the given div.
 // Div must be a jQuery selector. The div will be emptied.
-function makeEachday(days, div) {
+function makeEachday(categories, days, div) {
+    // V is the visualization object that we will return.
+    var V = {};
+    V.div = d3.select(div[0]);
+
     // Copy skeleton from the template.
     div.empty();
     div.append($("#eachday_template").children().clone());
 
-    // V is the visualization object that we will return.
-    var V = {};
-    V.div = d3.select(div[0]);
+    // Build legend.
+    legendDiv = div.find("div.legend_container");
+    V.legend = makeLegend(categories, legendDiv);
+
+    // Dimensions.
     V.main_margin = {top: 0, right: 20, bottom: 0, left: 120};
     V.main_width = 720 - V.main_margin.left - V.main_margin.right;
     V.main_height = days.length * 20;
@@ -126,7 +132,5 @@ function makeEachday(days, div) {
 }
 
 // LEFT TODO:
-// - legend showing top-level categories (make svg reusable, so I can use it
-//   for the other plots too)
 // - tooltip with info on hover
 // - modal showing the day's events in detail

@@ -46,7 +46,6 @@ function makeLegend(categories, div) {
       .enter().append("g")
         .attr("class", "category")
         .attr("transform", function(d) {
-            console.log(d);
             return "translate(" + V.x(d.col) + ", " + V.y(d.row) + ")";
         });
 

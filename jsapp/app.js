@@ -114,9 +114,7 @@ function main() {
     });
 
     // Build each-day visualization.
-    var eachdayLegend = makeLegend(categories, $("#eachday_legend"));
-    window.legend = eachdayLegend;  // DEBUG
-    var eachday = makeEachday(days, $("#eachday"));
+    var eachday = makeEachday(categories, days, $("#eachday"));
     window.eachday = eachday;  // DEBUG
 
     /*
