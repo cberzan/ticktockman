@@ -69,6 +69,18 @@ function getRootToLeafPaths(root) {
     }
 }
 
+// Traverse the given tree recursively, and call func(node, childResults) on
+// every node, where childResults is an array with the results of applying func
+// to the node's children. The nodes must have a "children" property, which is
+// either an array of nodes, or an object with nodes as values.
+function traverseTree(root, func) {
+    var childResults = _.map(root.children, function(node) {
+        return traverseTree(node, func);
+    });
+    return func(root, childResults);
+}
+// TODO: unit test this and get rid of the other tree funcs.
+
 // Return true iff the given moment falls at midnight.
 function isMidnight(moment) {
     return (moment.hour() == 0 && moment.minute() == 0);

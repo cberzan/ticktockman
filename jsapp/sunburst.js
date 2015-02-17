@@ -1,7 +1,6 @@
-// Build a sunburst visualization of the given events in the given div.
+// Build a sunburst visualization of the given days in the given div.
 // Div must be a jQuery selector. The div will be emptied.
-// Color will be called like this: color(category, depth).
-function makeSunburst(categories, events, div, color) {
+function makeSunburst(categories, days, div) {
     // Copy skeleton from the template.
     div.empty();
     div.append($("#sunburst_template").children().clone());
@@ -38,12 +37,12 @@ function makeSunburst(categories, events, div, color) {
         .attr("r", sunburst.radius)
         .style("opacity", 0);
 
-    sunburst.partitionData = buildPartitionData(categories, events);
+    sunburst.partitionData = buildPartitionData(categories, days);
 
     // For efficiency, filter nodes to keep only those large enough to see.
     sunburst.nodes = sunburst.partition.nodes(sunburst.partitionData)
         .filter(function(d) {
-        return (d.dx > 0.005); // 0.005 radians = 0.29 degrees
+            return (d.dx > 0.005); // 0.005 radians = 0.29 degrees
         });
 
     sunburst.path = sunburst.container
@@ -53,7 +52,7 @@ function makeSunburst(categories, events, div, color) {
         .attr("display", function(d) { return d.depth ? null : "none"; })
         .attr("d", sunburst.arc)
         .attr("fill-rule", "evenodd")
-        .style("fill", function(d) { return color(d.name, d.depth); })
+        .style("fill", function(d) { return d.category.color; })
         .style("opacity", 1)
         .on("mouseover", function(d) { sunburstMouseover(sunburst, d); });
 
@@ -69,28 +68,45 @@ function makeSunburst(categories, events, div, color) {
     return sunburst;
 }
 
-// Take categories and events and return an object suitable for
-// d3.partition.nodes(). The returned object is a tree of categories that has a
-// "size" property on every leaf. This size is the number of seconds spent in
-// that leaf category.
-function buildPartitionData(categories, events) {
-    var tree = cloneTree(categories);
-    var leaves = getLeaves(tree);
-    var categoryToLeaf = {};
-    _.each(leaves, function(leaf) {
-        leaf.size = 0;
-        categoryToLeaf[leaf.name] = leaf;
+// Take categories and days and return an object suitable for
+// d3.partition.nodes(). The returned object is a tree of categories, where
+// each node has a "name", "category", and "children" property. "children" is
+// an array of nodes. Each leaf has a "size" property, indicating the total
+// number of seconds spent in that leaf category.
+function buildPartitionData(categories, days) {
+    // Have to copy categories.root tree into a representation where "children"
+    // is an array instead of an object.
+    var newTree = traverseTree(categories.root,
+        function(node, childResults) {
+            return {
+                "name": node.name,
+                "category": node,
+                "children": childResults,
+            };
+        });
+    var categIdToNewNode = {};
+    traverseTree(newTree, function(newNode) {
+        categIdToNewNode[newNode.category.id] = newNode;
     });
+
+    // Sum up time spent at the leaves.
     _.each(events, function(evnt) {
-        if (evnt.category === 'untracked') {
+        if (evnt.category.name === "untracked") {
             return;
         }
-        if (!_.has(categoryToLeaf, evnt.category)) {
+        if (_.size(evnt.category.children) > 0) {
+            // FIXME: Check how d3.partition.nodes() deals with non-zero size
+            // attributes on non-leaf nodes. Support events whose category is
+            // not a leaf.
             throw new Error("category " + evnt.category + " is not a leaf");
         }
-        categoryToLeaf[evnt.category].size += durationSeconds(evnt);
+        var newNode = categIdToNewNode[evnt.category.id];
+        if (!_.has(newNode, "size")) {
+            newNode.size = 0;
+        }
+        newNode.size += durationSeconds(evnt);
     });
-    return tree;
+    return newTree;
 }
 
 // Fade all but the current sequence.

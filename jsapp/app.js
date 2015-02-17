@@ -116,12 +116,10 @@ function main() {
     var eachday = makeEachday(categories, days, $("#eachday"));
     window.eachday = eachday;  // DEBUG
 
-    /*
     // Build sunburst visualization.
-    var sunburstAll = makeSunburst(
-        data.categories, data.events,
-        $("#sunburst_all"), categoryColor);
+    var sunburstAll = makeSunburst(categories, days, $("#sunburst_all"));
 
+    /*
     // After createSunburst runs, the nodes in partitionData are ordered by
     // size. We take advantage of this to display the categories in the
     // streamgraph in the same order.
