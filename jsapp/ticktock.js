@@ -142,13 +142,32 @@ function groupEventsIntoDays(events) {
     return days;
 }
 
-// Add each event's duration in seconds, multiplied by coef, to the event's
-// category in categToSeconds. Assumes categToSeconds has a property for every
-// category.
-function tallyEvents(events, coef, categToSeconds) {
-    _.each(events, function(evnt) {
-        assert(_.has(categToSeconds, evnt.category));
-        assert(durationSeconds(evnt) >= 0);
-        categToSeconds[evnt.category] += durationSeconds(evnt) * coef;
-    });
+// DST logic: Return number of seconds in the date starting at the given
+// moment, which must be at midnight.
+function getSecondsInDate(dayBegin) {
+    assert(isMidnight(dayBegin));
+    var dayEnd = dayBegin.clone().add(1, 'day');
+    var targetSeconds = secondsInADay;
+    if (dayBegin.isDST() && !dayEnd.isDST()) {
+        targetSeconds += 60 * 60;
+    } else if (!dayBegin.isDST() && dayEnd.isDST()) {
+        targetSeconds -= 60 * 60;
+    }
+    return targetSeconds;
 }
+
+// DST logic: Return number of seconds in the week starting at the given
+// moment, which must be at midnight.
+function getSecondsInWeek(weekBegin) {
+    assert(isMidnight(weekBegin));
+    var weekEnd = weekBegin.clone().add(7, 'day');
+    var targetSeconds = secondsInADay * 7;
+    if (weekBegin.isDST() && !weekEnd.isDST()) {
+        targetSeconds += 60 * 60;
+    } else if (!weekBegin.isDST() && weekEnd.isDST()) {
+        targetSeconds -= 60 * 60;
+    }
+    return targetSeconds;
+}
+
+// TODO: unit tests for DST logic

@@ -1,9 +1,8 @@
 // Build a streamgraph visualization of the given days in the given div.
 // Div must be a jQuery selector. The div will be emptied.
-// orderedLeafCategories is an array of category names.
+// orderedLeafCategories is an array of categories.
 // Color will be called like this: color(category, depth).
-function makeStreamgraph(
-        categories, days, div, orderedLeafCategories, categoryColor) {
+function makeStreamgraph(categories, days, div, orderedLeafCategories) {
     // Copy skeleton from the template.
     div.empty();
     div.append($("#streamgraph_template").children().clone());
@@ -13,7 +12,7 @@ function makeStreamgraph(
     V.div = d3.select(div[0]);
     V.width = 730;
     V.height = 500;
-    V.stackData = buildStackData(orderedLeafCategories, days);
+    V.stackData = buildStackData(categories, orderedLeafCategories, days);
 
     V.x = d3.scale.linear()
         .domain([0, V.stackData[0].length - 1])
@@ -38,7 +37,7 @@ function makeStreamgraph(
         .data(V.layers)
         .enter().append("path")
         .attr("d", V.area)
-        .style("fill", function(d) { return categoryColor(d[0].category); })
+        .style("fill", function(d) { return d[0].category.color; })
         .on("mouseover", function(d) { streamgraphMouseover(V, d); })
         .on("mousemove", function(d) { streamgraphMousemove(V, d); });
 
@@ -50,7 +49,7 @@ function makeStreamgraph(
 // Take categories and days and return an object suitable for
 // d3.stack(). The returned object is a 2-dimensional array of objects that
 // have x, y, y0, weekBegin, weekEnd and category properties.
-function buildStackData(orderedLeafCategories, days) {
+function buildStackData(categories, orderedLeafCategories, days) {
     // Need at least a week's worth of data.
     if (days.length < 7) {
         // TODO UI
@@ -60,47 +59,58 @@ function buildStackData(orderedLeafCategories, days) {
 
     // Build layers array.
     var layers = [];
-    var categToLayer = {};
-    var categToSeconds = {};
+    var categIdToLayer = {};
+    var categIdToSeconds = {};
     _.each(orderedLeafCategories, function(category) {
         layer = [];
         layers.push(layer);
-        categToLayer[category] = layer;
-        categToSeconds[category] = 0;
+        categIdToLayer[category.id] = layer;
+        categIdToSeconds[category.id] = 0;
     });
     var weekIndex = 0;
     var weekBegin = days[0][0].begin.clone();
     var weekEnd = days[6][days[6].length - 1].end.clone();
     var saveWeek = function() {
         var totalSeconds = 0;
-        _.each(categToLayer, function(layer, category) {
-            totalSeconds += categToSeconds[category];
+        _.each(categIdToLayer, function(layer, categId) {
+            totalSeconds += categIdToSeconds[categId];
             layer.push({
                 "x": weekIndex,
-                "y": categToSeconds[category],
+                "y": categIdToSeconds[categId],
                 "y0": 0,
                 "weekBegin": weekBegin.clone(),
                 "weekEnd": weekEnd.clone(),
-                "category": category,
+                "category": categories.list[categId],
             });
         });
         // Sanity check that the time spent adds up to an entire week.
-        // FIXME: breaks on DST
-        assert(totalSeconds == secondsInADay * 7);
+        var targetSeconds = getSecondsInWeek(weekBegin);
+        assert(totalSeconds == targetSeconds);
     };
     for (var i = 0; i < 7; i++) {
-        tallyEvents(days[i], 1, categToSeconds);
+        tallyEvents(days[i], 1, categIdToSeconds);
     }
     saveWeek();
     for(var i = 7; i < days.length; i++) {
         weekIndex += 1;
         weekBegin.add(1, 'day');
         weekEnd.add(1, 'day');
-        tallyEvents(days[i - 7], -1, categToSeconds);
-        tallyEvents(days[i], 1, categToSeconds);
+        tallyEvents(days[i - 7], -1, categIdToSeconds);
+        tallyEvents(days[i], 1, categIdToSeconds);
         saveWeek();
     }
     return layers;
+}
+
+// Add each event's duration in seconds, multiplied by coef, to the event's
+// category in categIdToSeconds. Assumes categIdToSeconds has a property for
+// every category.
+function tallyEvents(events, coef, categIdToSeconds) {
+    _.each(events, function(evnt) {
+        assert(_.has(categIdToSeconds, evnt.category.id));
+        assert(durationSeconds(evnt) >= 0);
+        categIdToSeconds[evnt.category.id] += durationSeconds(evnt) * coef;
+    });
 }
 
 // Update HUD.
@@ -122,10 +132,11 @@ function streamgraphMouseover(V, d) {
         .style("opacity", 0.3);
 
     V.svg.selectAll("path")
-        .filter(function(node) { return node[0].category == d[0].category; })
+        .filter(function(node) {
+            return node[0].category.id == d[0].category.id; })
         .style("opacity", 1);
 
-    V.div.select(".category").text(d[0].category);
+    V.div.select(".category").text(d[0].category.name);
     V.div.select(".hud_hover").style("visibility", "visible");
 }
 

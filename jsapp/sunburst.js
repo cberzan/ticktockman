@@ -92,6 +92,7 @@ function buildPartitionData(categories, days) {
     // Sum up time spent at the leaves.
     _.each(events, function(evnt) {
         if (evnt.category.name === "untracked") {
+            // newTree contains "untracked", but we leave its size as 0.
             return;
         }
         if (_.size(evnt.category.children) > 0) {

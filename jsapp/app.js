@@ -102,13 +102,7 @@ function main() {
             assert(durationSeconds(evnt) >= 0);
             return memo + durationSeconds(evnt);
         }, 0);
-        // TODO: unit test for this DST logic
-        var targetSeconds = secondsInADay;
-        if (_.first(day).begin.isDST() && !_.last(day).end.isDST()) {
-            targetSeconds += 60 * 60;
-        } else if (!_.first(day).begin.isDST() && _.last(day).end.isDST()) {
-            targetSeconds -= 60 * 60;
-        }
+        var targetSeconds = getSecondsInDate(_.first(day).begin);
         assert(totalSeconds == targetSeconds);
     });
 
@@ -119,22 +113,16 @@ function main() {
     // Build sunburst visualization.
     var sunburstAll = makeSunburst(categories, days, $("#sunburst_all"));
 
-    /*
     // After createSunburst runs, the nodes in partitionData are ordered by
     // size. We take advantage of this to display the categories in the
     // streamgraph in the same order.
     var orderedLeafCategories = _.map(
         getLeaves(sunburstAll.partitionData),
-        function(leaf) { return leaf.name; });
-    orderedLeafCategories.push("untracked");
-    */
+        function(leaf) { return leaf.category; });
 
-    /*
     // Build streamgraph visualization.
     var streamgraphAll = makeStreamgraph(
-        data.categories, days,
-        $("#streamgraph_all"), orderedLeafCategories, categoryColor);
-    */
+        categories, days, $("#streamgraph_all"), orderedLeafCategories);
 }
 
 main();
