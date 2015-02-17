@@ -5,7 +5,6 @@ function makeOneday(day, jqDiv) {
     var V = {};
     V.jqDiv = jqDiv;
     V.d3Div = d3.select(jqDiv[0]);
-    console.log(day);
 
     // Set modal title.
     $(V.jqDiv).find(".modal-title").text(

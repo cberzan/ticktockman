@@ -75,7 +75,7 @@ function main() {
         var firstEvent = _.first(_.first(days));
         if (!isMidnight(firstEvent.begin)) {
             _.first(days).unshift({
-                "category": "untracked",
+                "category": categories.root.children["untracked"],
                 "begin": firstEvent.begin.clone().hour(0).minute(0),
                 "end": firstEvent.begin.clone(),
             });
@@ -83,13 +83,12 @@ function main() {
         var lastEvent = _.last(_.last(days));
         if (!isMidnight(lastEvent.end)) {
             _.last(days).push({
-                "category": "untracked",
+                "category": categories.root.children["untracked"],
                 "begin": lastEvent.end.clone(),
                 "end": lastEvent.end.clone().hour(0).minute(0).add(1, 'day'),
             });
         }
     }
-    // FIXME: above needs to use real untracked category, not just the string.
 
     // Sanity check days.
     _.each(days, function(day) {
