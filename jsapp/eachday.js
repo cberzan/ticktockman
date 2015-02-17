@@ -92,7 +92,12 @@ function makeEachday(categories, days, jqDiv) {
         .attr("height", V.y.rangeBand())
         .attr("x", function(d) { return V.x(d.beginSec); })
         .attr("width", function(d) { return V.x(d.endSec) - V.x(d.beginSec); })
-        .style("fill", function(d) { return d.category.color; });
+        .style("fill", function(d) { return d.category.color; })
+      .append("title")  // tooltip
+        .text(function(d) {
+            return (d.category.name +
+                " (" + humanizeSeconds(d.endSec - d.beginSec) + ")");
+        });
 
     // Add a footer with an x axis showing the time of day.
     // FIXME: margin etc not DRY
@@ -140,6 +145,3 @@ function showDayModal(V, day) {
     V.oneday = makeOneday(day, modalDiv);
     modalDiv.modal("show");
 }
-
-// LEFT TODO:
-// - tooltip with info on hover

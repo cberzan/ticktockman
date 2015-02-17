@@ -37,17 +37,20 @@
 
     <div id="eachday_template" class="template">
       <div class="eachday">
+        <!-- Main viz: -->
         <p>
           The dataset contains <span class="num_days"></span> days, from <span
-          class="first_date"></span> to <span class="last_date"></span>. Click
-          on a day to see it in detail.
+          class="first_date"></span> to <span class="last_date"></span>.<br>
+          Hover on a time segment to see its category and duration.<br>
+          Click on a row to see a detailed record of that day.
         </p>
         <div class="legend_container"></div>
         <div class="vscroll">
           <svg class="main"></svg>
         </div>
         <svg class="footer"></svg>
-        <!-- Modal for showing a day's data in detail. -->
+
+        <!-- Modal for showing a day's data in detail: -->
         <!-- FIXME: id="myModalLabel" is global -->
         <div class="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
           <div class="modal-dialog">
