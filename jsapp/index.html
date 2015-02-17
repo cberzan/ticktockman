@@ -41,7 +41,8 @@
         <p>
           The dataset contains <span class="num_days"></span> days, from <span
           class="first_date"></span> to <span class="last_date"></span>.<br>
-          Hover on a time segment to see its category and duration.<br>
+          Hover over a time segment to see the activity it represents, and its
+          duration.<br>
           Click on a row to see a detailed record of that day.
         </p>
         <div class="legend_container"></div>
@@ -131,10 +132,13 @@
       </div>
 
       <div class="row">
-        <h1>Individual days</h1>
+        <h1>Time spent by date</h1>
         <div id="eachday"></div>
 
-        <h1>Where all the time went</h1>
+        <br>
+        <br>
+        <br>
+        <h1>Time spent by activity</h1>
         <p>
           Hover over a section of the chart to see how much time you spent on
           that particular activity.<br>
@@ -143,10 +147,21 @@
         </p>
         <div id="sunburst_all"></div>
 
+        <br>
+        <br>
+        <br>
         <h1>Changes from week to week</h1>
-        <p>bla bla</p>
+        <p>
+          (This part is still work in progress.)<br>
+          Move your mouse up or down to highlight a particular activity.<br>
+          Move your mouse left or right to highlight a particular week.</br>
+          The weekly average time spent is shown below the visualization.
+        </p>
         <div id="streamgraph_all"></div>
 
+        <!-- TODO: original idea was to have sunburst and streamgraph
+             visualizations for weekdays only and weekends only, as well as the
+             overall ones. -->
       </div>
 
       <footer class="footer">
