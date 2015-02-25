@@ -34,10 +34,8 @@ Within `jsapp`, the main data structures are described above the
 the main page live in `eachday.js` (time spent by date), `sunburst.js` (time
 spent by activity), and `streamgraph.js` (changes from week to week).
 
-To run the code linter, use `jshint *.js`. To run the qunit tests:
+To run the code linter, use `jshint *.js`.
 
-```
-cd jsapp/
-python -m SimpleHTTPServer 8889
-# then go to http://localhost:8889/tests.html in your browser
-```
+To run the qunit tests, use `mocha -u qunit`.
+
+TODO: explain dev setup and required global node packages.
