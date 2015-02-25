@@ -2,6 +2,7 @@
   "name": "ticktockman",
   "version": "0.1.0",
   "dependencies": {
+    "browserify": "^9.0.3",
     "d3": "^3.5.5",
     "moment": "^2.9.0",
     "underscore": "^1.8.2"

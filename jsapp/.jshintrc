@@ -3,9 +3,6 @@
     "undef": true,
     "unused": true,
     "globals": {
-        "_": false,
-        "$": false,
-        "d3": false,
-        "moment": false
+        "$": false
     }
 }

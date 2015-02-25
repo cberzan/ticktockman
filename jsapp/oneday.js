@@ -7,7 +7,7 @@ var ticktock = require("./ticktock.js");
 
 // Build a oneday visualization of the given day in the given div.
 // jqDiv must be a jQuery selector.
-exports.makeOneday = function(day, jqDiv) {
+exports.makeViz = function(day, jqDiv) {
     // V is the visualization object that we will return.
     var V = {};
     V.jqDiv = jqDiv;

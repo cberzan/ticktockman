@@ -1,7 +1,6 @@
 "use strict";
 
 var assert = require("assert");
-var moment = require("moment");
 var _ = require("underscore");
 
 // Take a number of seconds and return a compact humanized string, like "3d5h",

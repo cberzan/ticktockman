@@ -210,7 +210,7 @@ exports.loadData = function(events) {
         app.categories, app.days, $("#eachday"));
 
     // Build sunburst visualization.
-    app.sunburstAll = sunburst.makeSunburst(
+    app.sunburstAll = sunburst.makeViz(
         app.categories, app.days, $("#sunburst_all"));
 
     // After createSunburst runs, the nodes in partitionData are ordered by
@@ -221,7 +221,7 @@ exports.loadData = function(events) {
         function(leaf) { return leaf.category; });
 
     // Build streamgraph visualization.
-    app.streamgraphAll = streamgraph.makeStreamgraph(
+    app.streamgraphAll = streamgraph.makeViz(
         app.categories, app.days, $("#streamgraph_all"),
         orderedLeafCategories);
 
