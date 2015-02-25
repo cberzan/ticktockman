@@ -22,20 +22,24 @@ TODO describe JSON format, csv format, etc.
 
 ## Contributing
 
-Pull requests are welcome.
+Pull requests are welcome :)
 
-Project structure: `sample-data` contains a sample dataset in CSV format.
-`pytools` contains tools to convert a dataset from CSV format into JSON format.
-`jsapp` contains the main JavaScript application to visualize a dataset in JSON
-format.
+When you first clone the repo, run `npm install` to download the necessary
+dependencies.
 
-Within `jsapp`, the main data structures are described above the
-`preprocessData` function in `app.js`. The three visualizations appearing on
-the main page live in `eachday.js` (time spent by date), `sunburst.js` (time
-spent by activity), and `streamgraph.js` (changes from week to week).
+The project is structured as follows: `src` contains the visualization code,
+`sample-data` contains a sample CSV dataset, and `tools` contains scripts to
+convert datasets from CSV to JSON and vice versa. `bundle` contains the
+necessary files to run Ticktockman in a browser.
 
-To run the code linter, use `jshint *.js`.
+Within `src`, the main data structures are described above the `preprocessData`
+function in `app.js`. The three visualizations appearing on the main page are
+in `eachday.js` (time spent by date), `sunburst.js` (time spent by activity),
+and `streamgraph.js` (changes from week to week).
 
-To run the qunit tests, use `mocha -u qunit`.
+When you make changes to the code in `src`, run `make bundle` to update the
+packaged code in `bundle`, so you can see your changes in the browser.
 
-TODO: explain dev setup and required global node packages.
+To run Ticktockman in the browser, run `make runserver`.
+
+To run the unit tests, run `make test`.
