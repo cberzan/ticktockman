@@ -1,6 +1,9 @@
+var ticktockman = (function (my) {
+"use strict";
+
 // Build an eachday visualization of the given days in the given div.
 // jqDiv must be a jQuery selector. The div will be emptied.
-function makeEachday(categories, days, jqDiv) {
+my.makeEachday = function(categories, days, jqDiv) {
     // V is the visualization object that we will return.
     var V = {};
     V.jqDiv = jqDiv;
@@ -11,8 +14,9 @@ function makeEachday(categories, days, jqDiv) {
     jqDiv.append($("#eachday_template").children().clone());
 
     // Build legend.
-    legendDiv = jqDiv.find("div.legend_container");
-    V.legend = makeLegend(categories, legendDiv);
+    // TODO: position it better w.r.t. the rest of the visualization.
+    var legendDiv = jqDiv.find("div.legend_container");
+    V.legend = my.makeLegend(categories, legendDiv);
 
     // Dimensions.
     V.main_margin = {top: 0, right: 20, bottom: 0, left: 120};
@@ -21,9 +25,6 @@ function makeEachday(categories, days, jqDiv) {
     V.footer_margin = {top: 0, right: 20, bottom: 0, left: 120};
     V.footer_width = V.main_width;
     V.footer_height = 40;
-
-    // DEBUG
-    V.input_days = days;
 
     // Fill in the description text.
     V.d3Div.select(".num_days").text(days.length);
@@ -61,11 +62,11 @@ function makeEachday(categories, days, jqDiv) {
     // Scales. This currently misbehaves for DST, producing a slightly longer
     // or a slightly shorter day. Not sure how to fix it in a non-ugly way.
     V.x = d3.scale.linear()
-        .domain([0, secondsInADay])
+        .domain([0, my.secondsInADay])
         .range([0, V.main_width]);
     V.y = d3.scale.ordinal()
         .domain(_.map(V.data, function(d) { return d.index; }))
-        .rangeRoundBands([0, V.main_height], .08, 0);
+        .rangeRoundBands([0, V.main_height], 0.08, 0);
 
     // Init svg.
     V.svg_main = V.d3Div.select("svg.main")
@@ -83,7 +84,7 @@ function makeEachday(categories, days, jqDiv) {
         .attr("transform", function(d) {
             return "translate(0, " + V.y(d.index) + ")";
         })
-        .on("click", function(d) { showDayModal(V, d); });
+        .on("click", function(d) { my.showDayModal(V, d); });
 
     // Each event becomes a rectangle within that day's row.
     V.days.selectAll("rect")
@@ -92,11 +93,11 @@ function makeEachday(categories, days, jqDiv) {
         .attr("height", V.y.rangeBand())
         .attr("x", function(d) { return V.x(d.beginSec); })
         .attr("width", function(d) { return V.x(d.endSec) - V.x(d.beginSec); })
-        .style("fill", function(d) { return d.category.color; })
+        .style("fill", function(d) { return d.category.topLevel.color; })
       .append("title")  // tooltip
         .text(function(d) {
             return (d.category.name +
-                " (" + humanizeSeconds(d.endSec - d.beginSec) + ")");
+                " (" + my.humanizeSeconds(d.endSec - d.beginSec) + ")");
         });
 
     // Add a footer with an x axis showing the time of day.
@@ -108,16 +109,16 @@ function makeEachday(categories, days, jqDiv) {
             V.footer_height + V.footer_margin.top + V.footer_margin.bottom)
       .append("g")
         .attr("transform",
-            "translate(" + V.footer_margin.left + ","
-            + V.footer_margin.top + ")");
+            "translate(" + V.footer_margin.left + "," +
+            V.footer_margin.top + ")");
     V.xAxis = d3.svg.axis()
         .scale(V.x)
         .tickValues(_.map([0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24],
             function(hour) { return hour * 60 * 60; }))
         .tickFormat(function(seconds) {
             var duration = moment.duration(seconds, 'seconds');
-            return (duration.hours() + ":"
-                + d3.format("02d")(duration.minutes()));
+            return (duration.hours() + ":" +
+                d3.format("02d")(duration.minutes()));
         })
         .orient("bottomk");
     V.svg_footer.append("g")
@@ -138,10 +139,13 @@ function makeEachday(categories, days, jqDiv) {
         .call(V.yAxis);
 
     return V;
-}
+};
 
-function showDayModal(V, day) {
+my.showDayModal = function(V, day) {
     var modalDiv = $(V.jqDiv).find(".modal");
-    V.oneday = makeOneday(day, modalDiv);
+    V.oneday = my.makeOneday(day, modalDiv);
     modalDiv.modal("show");
-}
+};
+
+return my;
+}(ticktockman || {}));

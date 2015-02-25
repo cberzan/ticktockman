@@ -3,6 +3,10 @@ from datetime import timedelta
 import csv
 import dateutil.parser
 
+# TODO:
+# - errors need filename, not just lineno
+# - regression test: time(0, 0) evaluates as False, causing parsing error
+
 
 class RawLine(object):
     def __init__(self):
@@ -51,7 +55,7 @@ def parse_events(csvfile):
     prev_row = parse_csv_line(2, reader.next())
     if not prev_row.date:
         raise ValueError("first row must specify date")
-    if not prev_row.end_time:
+    if prev_row.end_time is None:
         raise ValueError("first row must specify end_time")
     prev_event_end = datetime.combine(prev_row.date, prev_row.end_time)
 

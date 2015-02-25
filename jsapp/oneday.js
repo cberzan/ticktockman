@@ -1,6 +1,9 @@
+var ticktockman = (function (my) {
+"use strict";
+
 // Build a oneday visualization of the given day in the given div.
 // jqDiv must be a jQuery selector.
-function makeOneday(day, jqDiv) {
+my.makeOneday = function(day, jqDiv) {
     // V is the visualization object that we will return.
     var V = {};
     V.jqDiv = jqDiv;
@@ -25,9 +28,9 @@ function makeOneday(day, jqDiv) {
     // We use the event's beginSec as the key for the y scale's domain.
     V.y = d3.scale.ordinal()
         .domain(_.map(day.events, function(d) { return d.beginSec; }))
-        .rangeRoundBands([0, V.height], .08, 0);
+        .rangeRoundBands([0, V.height], 0.08, 0);
     V.rectWidth = d3.scale.linear()
-        .domain([0, secondsInADay / 3])
+        .domain([0, my.secondsInADay / 3])
         .range([0, V.barWidth]);
 
     // Each event becomes a row, which is a <g> element.
@@ -55,11 +58,14 @@ function makeOneday(day, jqDiv) {
         .attr("x", V.barWidth + 4)
         .attr("y", 16)
         .text(function(d) {
-            return (d.begin.format("H:mm") + " - " + d.end.format("H:mm")
-                + " (" + humanizeSeconds(d.endSec - d.beginSec) + ") "
-                + d.category.name);
+            return (d.begin.format("H:mm") + " - " + d.end.format("H:mm") +
+                " (" + my.humanizeSeconds(d.endSec - d.beginSec) + ") " +
+                d.category.name);
             // TODO include comments, and support long lines somehow
         });
 
     return V;
-}
+};
+
+return my;
+}(ticktockman || {}));

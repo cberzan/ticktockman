@@ -87,6 +87,11 @@ body {
   display: none;
 }
 
+#load-data-modal .error {
+  display: none;
+  color: red;
+}
+
 .eachday div.vscroll {
   height: 400px;
   resize: vertical;

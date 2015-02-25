@@ -99,7 +99,8 @@
 
     <div id="streamgraph_template" class="template">
       <div class="streamgraph">
-        <svg></svg>
+        <div class="legend_container"></div>
+        <svg class="main"></svg>
         <div class="hud_hover">
           <span class="category"></span>:
           <span class="timespent"></span>
@@ -114,7 +115,7 @@
       <div class="header">
         <nav>
           <ul class="nav nav-pills pull-right">
-            <li role="presentation"><a href="TODO">view project on GitHub</a></li>
+            <li role="presentation"><a href="https://github.com/cberzan/ticktockman">view project on GitHub</a></li>
           </ul>
         </nav>
         <h3 class="text-muted">Ticktockman</h3>
@@ -128,7 +129,40 @@
           href="TODO">learn how to format</a> your own time-tracking data for
           use with Ticktockman.
         </p>
-        <p><a class="btn btn-lg btn-success" href="#" role="button">I want to load my own data!</a></p>
+        <p><a id="load-data" class="btn btn-lg btn-success" href="#" role="button">I want to load my own data!</a></p>
+      </div>
+
+      <!-- Modal for loading custom data: -->
+      <div id="load-data-modal" class="modal" tabindex="-1" role="dialog" aria-labelledby="load-data-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title" id="load-data-modal-label">Load data</h4>
+            </div>
+            <div class="modal-body">
+              <p>
+                Privacy first: Ticktockman works entirely in your browser. Your
+                data is not saved, uploaded, or transmitted to any server.
+              </p>
+              <p>
+                Your data must follow a <a href="TODO">specific JSON format</a>
+                for it to work with Ticktockman.
+              </p>
+              <p>
+                Paste your data below:
+              </p>
+              <textarea id="data-pastebin" class="form-control" rows="10"></textarea>
+              <p class="error">
+                There was an error: <span class="error-message"></span>.<br>
+                Make sure your data is well-formed, and try again.
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button id="visualize" type="button" class="btn btn-primary">Visualize!</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="row">
@@ -166,9 +200,10 @@
 
       <footer class="footer">
         <p>
-          Built by <a href="http://thirld.com/">Constantin Berzan</a> in 2014
+          Built by <a href="http://thirld.com/">Constantin Berzan</a> in 2015
           using Mike Bostock's <a href="http://d3js.org/">D3.js</a>. Find the
-          source <a href="TODO">on GitHub</a>.
+          source <a href="https://github.com/cberzan/ticktockman">on
+          GitHub</a>.
         </p>
       </footer>
 
@@ -182,5 +217,9 @@
     <script type="text/javascript" src="sunburst.js"></script>
     <script type="text/javascript" src="streamgraph.js"></script>
     <script type="text/javascript" src="app.js"></script>
+    <script type="text/javascript">
+      ticktockman.setup();
+      ticktockman.loadData(sampleData);
+    </script>
   </body>
 </html>

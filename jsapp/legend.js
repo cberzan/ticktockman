@@ -1,6 +1,9 @@
+var ticktockman = (function (my) {
+"use strict";
+
 // Build a legend in the given div showing the top-level categories.
 // Div must be a jQuery selector. The div will be emptied.
-function makeLegend(categories, div) {
+my.makeLegend = function(categories, div) {
     // Copy skeleton from the template.
     div.empty();
     div.append($("#legend_template").children().clone());
@@ -63,4 +66,7 @@ function makeLegend(categories, div) {
         .text(function(d) { return d.name; });
 
     return V;
-}
+};
+
+return my;
+}(ticktockman || {}));
