@@ -10,7 +10,7 @@ var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
 
-var ticktockman = require('../jsapp/app.js');
+var ticktockman = require('../src/app.js');
 
 // Recursive helper for outputSegmentTxt().
 var outputOntologyNode = function(lines, node, prefix) {
