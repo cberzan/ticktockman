@@ -1,12 +1,16 @@
-var ticktockman = (function (my) {
 "use strict";
+
+var d3 = require("d3");
+var _ = require("underscore");
+
+var ticktock = require("./ticktock.js");
 
 // Some parts of this file are based on http://bl.ocks.org/kerryrodden/7090426.
 // Those parts are Copyright 2013 Google Inc, under the Apache 2.0 license.
 
 // Build a sunburst visualization of the given days in the given div.
 // Div must be a jQuery selector. The div will be emptied.
-my.makeSunburst = function(categories, days, div) {
+exports.makeViz = function(categories, days, div) {
     // Copy skeleton from the template.
     div.empty();
     div.append($("#sunburst_template").children().clone());
@@ -43,7 +47,7 @@ my.makeSunburst = function(categories, days, div) {
         .attr("r", sunburst.radius)
         .style("opacity", 0);
 
-    sunburst.partitionData = my.buildPartitionData(categories, days);
+    sunburst.partitionData = buildPartitionData(categories, days);
 
     // For efficiency, filter nodes to keep only those large enough to see.
     sunburst.nodes = sunburst.partition.nodes(sunburst.partitionData)
@@ -60,16 +64,16 @@ my.makeSunburst = function(categories, days, div) {
         .attr("fill-rule", "evenodd")
         .style("fill", function(d) { return d.category.color; })
         .style("opacity", 1)
-        .on("mouseover", function(d) { my.sunburstMouseover(sunburst, d); });
+        .on("mouseover", function(d) { sunburstMouseover(sunburst, d); });
 
     // Add the mouseleave handler to the bounding circle.
     sunburst.div.select(".container").on("mouseleave",
-        function(d) { my.sunburstMouseleave(sunburst, d); });
+        function(d) { sunburstMouseleave(sunburst, d); });
 
     // Total size (total number of seconds tracked).
     sunburst.totalSize = sunburst.path.node().__data__.value;
     sunburst.div.select(".total_time").text(
-        my.humanizeSeconds(sunburst.totalSize));
+        ticktock.humanizeSeconds(sunburst.totalSize));
 
     return sunburst;
 };
@@ -79,10 +83,10 @@ my.makeSunburst = function(categories, days, div) {
 // each node has a "name", "category", and "children" property. "children" is
 // an array of nodes. Each leaf has a "size" property, indicating the total
 // number of seconds spent in that leaf category.
-my.buildPartitionData = function(categories, days) {
+var buildPartitionData = function(categories, days) {
     // Have to copy categories.root tree into a representation where "children"
     // is an array instead of an object.
-    var newTree = my.traverseTree(categories.root,
+    var newTree = ticktock.traverseTree(categories.root,
         function(node, childResults) {
             return {
                 "name": node.name,
@@ -91,7 +95,7 @@ my.buildPartitionData = function(categories, days) {
             };
         });
     var categIdToNewNode = {};
-    my.traverseTree(newTree, function(newNode) {
+    ticktock.traverseTree(newTree, function(newNode) {
         categIdToNewNode[newNode.category.id] = newNode;
     });
 
@@ -112,18 +116,18 @@ my.buildPartitionData = function(categories, days) {
             if (!_.has(newNode, "size")) {
                 newNode.size = 0;
             }
-            newNode.size += my.durationSeconds(evnt);
+            newNode.size += ticktock.durationSeconds(evnt);
         });
     });
     return newTree;
 };
 
 // Fade all but the current sequence.
-my.sunburstMouseover = function(sunburst, d) {
+var sunburstMouseover = function(sunburst, d) {
   sunburst.div.select(".category").text(d.name);
 
   var percOfParent = 100 * d.value / d.parent.value;
-  var percOfParentStr = my.humanizePercent(percOfParent);
+  var percOfParentStr = ticktock.humanizePercent(percOfParent);
   sunburst.div.select(".perc_of_parent").text(percOfParentStr);
 
   var percOfTotal = (100 * d.value / sunburst.totalSize).toPrecision(3);
@@ -134,18 +138,18 @@ my.sunburstMouseover = function(sunburst, d) {
   sunburst.div.select(".perc_of_total").text(percOfTotalStr);
 
   var secondsSpent = d.value;
-  var timeSpentString = my.humanizeSeconds(secondsSpent);
+  var timeSpentString = ticktock.humanizeSeconds(secondsSpent);
   sunburst.div.select(".timespent").text(timeSpentString);
 
   var secondsInADay = 86400.0;
   var secondsPerDay = secondsInADay * d.value / sunburst.totalSize;
-  var perDayString = my.humanizeSeconds(secondsPerDay);
+  var perDayString = ticktock.humanizeSeconds(secondsPerDay);
   sunburst.div.select(".perday").text(perDayString);
 
   sunburst.div.select(".hud").style("visibility", "hidden");
   sunburst.div.select(".hud_hover").style("visibility", "visible");
 
-  var sequenceArray = my.getAncestors(d);
+  var sequenceArray = getAncestors(d);
 
   // Fade all the segments.
   sunburst.container.selectAll("path")
@@ -160,7 +164,7 @@ my.sunburstMouseover = function(sunburst, d) {
 };
 
 // Restore everything to full opacity when moving off the visualization.
-my.sunburstMouseleave = function(sunburst) {
+var sunburstMouseleave = function(sunburst) {
   // Set each segment to full opacity.
   sunburst.container.selectAll("path")
       .style("opacity", 1);
@@ -171,7 +175,7 @@ my.sunburstMouseleave = function(sunburst) {
 
 // Given a node in a partition layout, return an array of all of its ancestor
 // nodes, highest first, but excluding the root.
-my.getAncestors = function(node) {
+var getAncestors = function(node) {
   var path = [];
   var current = node;
   while (current.parent) {
@@ -180,6 +184,3 @@ my.getAncestors = function(node) {
   }
   return path;
 };
-
-return my;
-}(ticktockman || {}));

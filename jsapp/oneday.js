@@ -1,9 +1,13 @@
-var ticktockman = (function (my) {
 "use strict";
+
+var d3 = require("d3");
+var _ = require("underscore");
+
+var ticktock = require("./ticktock.js");
 
 // Build a oneday visualization of the given day in the given div.
 // jqDiv must be a jQuery selector.
-my.makeOneday = function(day, jqDiv) {
+exports.makeOneday = function(day, jqDiv) {
     // V is the visualization object that we will return.
     var V = {};
     V.jqDiv = jqDiv;
@@ -30,7 +34,7 @@ my.makeOneday = function(day, jqDiv) {
         .domain(_.map(day.events, function(d) { return d.beginSec; }))
         .rangeRoundBands([0, V.height], 0.08, 0);
     V.rectWidth = d3.scale.linear()
-        .domain([0, my.secondsInADay / 3])
+        .domain([0, ticktock.secondsInADay / 3])
         .range([0, V.barWidth]);
 
     // Each event becomes a row, which is a <g> element.
@@ -59,13 +63,10 @@ my.makeOneday = function(day, jqDiv) {
         .attr("y", 16)
         .text(function(d) {
             return (d.begin.format("H:mm") + " - " + d.end.format("H:mm") +
-                " (" + my.humanizeSeconds(d.endSec - d.beginSec) + ") " +
+                " (" + ticktock.humanizeSeconds(d.endSec - d.beginSec) + ") " +
                 d.category.name);
             // TODO include comments, and support long lines somehow
         });
 
     return V;
 };
-
-return my;
-}(ticktockman || {}));

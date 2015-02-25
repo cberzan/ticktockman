@@ -1,16 +1,12 @@
-var ticktockman = (function (my) {
 "use strict";
 
-my.assert = function(condition, message) {
-    if (!condition) {
-        message = message || "Assertion failed";
-        throw new Error(message);
-    }
-};
+var assert = require("assert");
+var moment = require("moment");
+var _ = require("underscore");
 
 // Take a number of seconds and return a compact humanized string, like "3d5h",
 // "5h3m", "3m5s", or "4s".
-my.humanizeSeconds = function(seconds) {
+exports.humanizeSeconds = function(seconds) {
     if (seconds > 86400) {
         return Math.floor(seconds / 86400) + "d" +
             Math.floor((seconds % 86400) / 3600) + "h";
@@ -26,7 +22,7 @@ my.humanizeSeconds = function(seconds) {
 };
 
 // Take a percentage, and return a humanized string like "86.3%" or "< 0.1%".
-my.humanizePercent = function(percent) {
+exports.humanizePercent = function(percent) {
     if (percent < 0.1) {
         return "< 0.1%";
     } else {
@@ -36,19 +32,19 @@ my.humanizePercent = function(percent) {
 
 // Return a deep-copy of the given tree. Only copies the "name" and "children"
 // properties.
-my.cloneTree = function(root) {
+exports.cloneTree = function(root) {
     var copy = {};
     copy.name = root.name;
     if (_.has(root, "children")) {
-        copy.children = _.map(root.children, my.cloneTree);
+        copy.children = _.map(root.children, exports.cloneTree);
     }
     return copy;
 };
 
 // Return an array containing the leaf nodes in the given tree.
-my.getLeaves = function(root) {
+exports.getLeaves = function(root) {
     if(_.has(root, "children")) {
-        return _.flatten(_.map(root.children, my.getLeaves));
+        return _.flatten(_.map(root.children, exports.getLeaves));
     } else {
         return [root];
     }
@@ -56,11 +52,11 @@ my.getLeaves = function(root) {
 
 // Return an array of root-to-leaf paths in the given tree.
 // All paths are arrays of nodes, from the root to a leaf.
-my.getRootToLeafPaths = function(root) {
+exports.getRootToLeafPaths = function(root) {
     if(_.has(root, "children")) {
         var paths = [];
         _.each(root.children, function(child) {
-            var childPaths = my.getRootToLeafPaths(child);
+            var childPaths = exports.getRootToLeafPaths(child);
             _.each(childPaths, function(path) {
                 path.unshift(root);
                 paths.push(path);
@@ -76,27 +72,27 @@ my.getRootToLeafPaths = function(root) {
 // every node, where childResults is an array with the results of applying func
 // to the node's children. The nodes must have a "children" property, which is
 // either an array of nodes, or an object with nodes as values.
-my.traverseTree = function(root, func) {
+exports.traverseTree = function(root, func) {
     var childResults = _.map(root.children, function(node) {
-        return my.traverseTree(node, func);
+        return exports.traverseTree(node, func);
     });
     return func(root, childResults);
 };
 // TODO: unit test this and get rid of the other tree funcs.
 
 // Return true iff the given moment falls at midnight.
-my.isMidnight = function(moment) {
+exports.isMidnight = function(moment) {
     return (moment.hour() === 0 && moment.minute() === 0);
 };
 
 // Return duration of the given event, in seconds.
-my.durationSeconds = function(evnt) {
+exports.durationSeconds = function(evnt) {
     return evnt.end.diff(evnt.begin, 'seconds');
 };
 
 // Split the given event where it crosses midnight, and return an array of
 // events that do not cross midnight.
-my.splitEventAtMidnight = function(evnt) {
+exports.splitEventAtMidnight = function(evnt) {
     var pieces = [];
     var begin = evnt.begin;
     var midnight = begin.clone().hour(0).minute(0).add(1, 'day');
@@ -125,12 +121,12 @@ my.splitEventAtMidnight = function(evnt) {
 // Returns an array of days, where each day is an array of events.
 // Assumes the events are already split at midnight, and cover a contiguous
 // stretch of time.
-my.groupEventsIntoDays = function(events) {
+exports.groupEventsIntoDays = function(events) {
     var days = [];
     var currentDay = [];
     _.each(events, function(evnt) {
         // If event starts at midnight, start a new day.
-        if (my.isMidnight(evnt.begin)) {
+        if (exports.isMidnight(evnt.begin)) {
             // Finish current day.
             if (currentDay.length > 0) {
                 days.push(currentDay);
@@ -145,14 +141,14 @@ my.groupEventsIntoDays = function(events) {
     return days;
 };
 
-my.secondsInADay = 86400.0;
+exports.secondsInADay = 86400.0;
 
 // DST logic: Return number of seconds in the date starting at the given
 // moment, which must be at midnight.
-my.getSecondsInDate = function(dayBegin) {
-    my.assert(my.isMidnight(dayBegin));
+exports.getSecondsInDate = function(dayBegin) {
+    assert(exports.isMidnight(dayBegin));
     var dayEnd = dayBegin.clone().add(1, 'day');
-    var targetSeconds = my.secondsInADay;
+    var targetSeconds = exports.secondsInADay;
     if (dayBegin.isDST() && !dayEnd.isDST()) {
         targetSeconds += 60 * 60;
     } else if (!dayBegin.isDST() && dayEnd.isDST()) {
@@ -163,10 +159,10 @@ my.getSecondsInDate = function(dayBegin) {
 
 // DST logic: Return number of seconds in the week starting at the given
 // moment, which must be at midnight.
-my.getSecondsInWeek = function(weekBegin) {
-    my.assert(my.isMidnight(weekBegin));
+exports.getSecondsInWeek = function(weekBegin) {
+    assert(exports.isMidnight(weekBegin));
     var weekEnd = weekBegin.clone().add(7, 'day');
-    var targetSeconds = my.secondsInADay * 7;
+    var targetSeconds = exports.secondsInADay * 7;
     if (weekBegin.isDST() && !weekEnd.isDST()) {
         targetSeconds += 60 * 60;
     } else if (!weekBegin.isDST() && weekEnd.isDST()) {
@@ -176,6 +172,3 @@ my.getSecondsInWeek = function(weekBegin) {
 };
 
 // TODO: unit tests for DST logic
-
-return my;
-}(ticktockman || {}));

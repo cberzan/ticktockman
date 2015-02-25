@@ -1,17 +1,26 @@
-var ticktockman = (function (my) {
 "use strict";
 
+var assert = require("assert");
+var d3 = require("d3");
+var moment = require("moment");
+var _ = require("underscore");
+
+var eachday = require("./eachday.js");
+var streamgraph = require("./streamgraph.js");
+var sunburst = require("./sunburst.js");
+var ticktock = require("./ticktock.js");
+
 // Helper for createColors(): recursively set the colors for the given node.
-my.assignColors = function(node, color) {
+var assignColors = function(node, color) {
     node.color = color;
     var childColor = color.brighter(0.5);
     _.each(node.children, function(child) {
-        my.assignColors(child, childColor);
+        assignColors(child, childColor);
     });
 };
 
 // Build color scheme, augmenting each category with a "color" key.
-my.createColors = function(categories) {
+var createColors = function(categories) {
     var topLevelCategoryIds = [];
     _.each(categories.root.children, function(node) {
         if (node.label != "untracked") {
@@ -28,7 +37,7 @@ my.createColors = function(categories) {
         if (node.name != "untracked") {
             color = d3.hsl(hueScale(node.id), saturation, lightness);
         }
-        my.assignColors(node, color);
+        assignColors(node, color);
     });
 };
 
@@ -78,7 +87,7 @@ my.createColors = function(categories) {
  * - `isMidnight(day[day.length - 1].end)`
  * - `day[i].end == day[i+1].begin`
  */
-my.preprocessData = function(events) {
+exports.preprocessData = function(events) {
     // Error out if we have no events.
     if (events.length === 0) {
         throw new Error("no events provided");
@@ -141,17 +150,17 @@ my.preprocessData = function(events) {
     });
 
     // Create color scheme.
-    my.createColors(categories);
+    createColors(categories);
 
     // Split events at midnight, and group events into days.
-    var splitEvents = _.flatten(_.map(events, my.splitEventAtMidnight));
-    var days = my.groupEventsIntoDays(splitEvents);
+    var splitEvents = _.flatten(_.map(events, ticktock.splitEventAtMidnight));
+    var days = ticktock.groupEventsIntoDays(splitEvents);
 
     // Pad incomplete days so that each day covers exactly 24h,
     // from midnight to midnight.
-    my.assert (days.length > 0);
+    assert (days.length > 0);
     var firstEvent = _.first(_.first(days));
-    if (!my.isMidnight(firstEvent.begin)) {
+    if (!ticktock.isMidnight(firstEvent.begin)) {
         _.first(days).unshift({
             "category": categories.root.children.untracked,
             "begin": firstEvent.begin.clone().hour(0).minute(0),
@@ -159,7 +168,7 @@ my.preprocessData = function(events) {
         });
     }
     var lastEvent = _.last(_.last(days));
-    if (!my.isMidnight(lastEvent.end)) {
+    if (!ticktock.isMidnight(lastEvent.end)) {
         _.last(days).push({
             "category": categories.root.children.untracked,
             "begin": lastEvent.end.clone(),
@@ -170,17 +179,17 @@ my.preprocessData = function(events) {
     // Sanity check days.
     _.each(days, function(day) {
         // The day's events must cover a 24h stretch from midnight to midnight.
-        my.assert(day.length > 0);
-        my.assert(my.isMidnight(_.first(day).begin));
-        my.assert(my.isMidnight(_.last(day).end));
+        assert(day.length > 0);
+        assert(ticktock.isMidnight(_.first(day).begin));
+        assert(ticktock.isMidnight(_.last(day).end));
 
         // The events in the day must add up to a full day.
         var totalSeconds = _.reduce(day, function(memo, evnt) {
-            my.assert(my.durationSeconds(evnt) >= 0);
-            return memo + my.durationSeconds(evnt);
+            assert(ticktock.durationSeconds(evnt) >= 0);
+            return memo + ticktock.durationSeconds(evnt);
         }, 0);
-        var targetSeconds = my.getSecondsInDate(_.first(day).begin);
-        my.assert(totalSeconds == targetSeconds);
+        var targetSeconds = ticktock.getSecondsInDate(_.first(day).begin);
+        assert(totalSeconds == targetSeconds);
     });
 
     return {"categories": categories, "days": days};
@@ -188,31 +197,39 @@ my.preprocessData = function(events) {
 
 // Main entry point to the application.
 // Visualize the given events, replacing any previous visualization.
-my.loadData = function(events) {
-    var result = my.preprocessData(events);
-    var categories = result.categories;
-    var days = result.days;
+exports.loadData = function(events) {
+    // This is the application object we will return.
+    var app = {};
+
+    var result = exports.preprocessData(events);
+    app.categories = result.categories;
+    app.days = result.days;
 
     // Build each-day visualization.
-    my.eachday = my.makeEachday(categories, days, $("#eachday"));
+    app.eachday = eachday.makeViz(
+        app.categories, app.days, $("#eachday"));
 
     // Build sunburst visualization.
-    my.sunburstAll = my.makeSunburst(categories, days, $("#sunburst_all"));
+    app.sunburstAll = sunburst.makeSunburst(
+        app.categories, app.days, $("#sunburst_all"));
 
     // After createSunburst runs, the nodes in partitionData are ordered by
     // size. We take advantage of this to display the categories in the
     // streamgraph in the same order.
     var orderedLeafCategories = _.map(
-        my.getLeaves(my.sunburstAll.partitionData),
+        ticktock.getLeaves(app.sunburstAll.partitionData),
         function(leaf) { return leaf.category; });
 
     // Build streamgraph visualization.
-    my.streamgraphAll = my.makeStreamgraph(
-        categories, days, $("#streamgraph_all"), orderedLeafCategories);
+    app.streamgraphAll = streamgraph.makeStreamgraph(
+        app.categories, app.days, $("#streamgraph_all"),
+        orderedLeafCategories);
+
+    return app;
 };
 
 // Set up event handlers for the load-data-modal.
-my.setup = function() {
+exports.setup = function() {
     $("#load-data").click(function() {
         $("#load-data-modal .error-message").text("");
         $("#load-data-modal .error").hide();
@@ -222,7 +239,7 @@ my.setup = function() {
     $("#visualize").click(function() {
         try {
             var data = $.parseJSON($("#data-pastebin").val());
-            my.loadData(data);
+            exports.loadData(data);
             $("#load-data-modal").modal("hide");
         } catch(err) {
             $("#load-data-modal .error-message").text(err);
@@ -232,6 +249,3 @@ my.setup = function() {
         }
     });
 };
-
-return my;
-}(ticktockman || {}));

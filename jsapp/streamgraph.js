@@ -1,10 +1,16 @@
-var ticktockman = (function (my) {
 "use strict";
+
+var assert = require("assert");
+var d3 = require("d3");
+var _ = require("underscore");
+
+var legend = require("./legend.js");
+var ticktock = require("./ticktock.js");
 
 // Build a streamgraph visualization of the given days in the given div.
 // jqDiv must be a jQuery selector. The div will be emptied.
 // orderedLeafCategories is an array of categories.
-my.makeStreamgraph = function(categories, days, jqDiv, orderedLeafCategories) {
+exports.makeViz = function(categories, days, jqDiv, orderedLeafCategories) {
     // V is the visualization object that we will return.
     var V = {};
     V.jqDiv = jqDiv;
@@ -23,12 +29,12 @@ my.makeStreamgraph = function(categories, days, jqDiv, orderedLeafCategories) {
     // Build legend.
     // TODO: Show items in the same order as orderedLeafCategories...
     var legendDiv = jqDiv.find("div.legend_container");
-    V.legend = my.makeLegend(categories, legendDiv);
+    V.legend = legend.makeViz(categories, legendDiv);
 
     // Dimensions.
     V.width = 730;
     V.height = 500;
-    V.stackData = my.buildStackData(categories, orderedLeafCategories, days);
+    V.stackData = buildStackData(categories, orderedLeafCategories, days);
 
     V.x = d3.scale.linear()
         .domain([0, V.stackData[0].length - 1])
@@ -54,10 +60,10 @@ my.makeStreamgraph = function(categories, days, jqDiv, orderedLeafCategories) {
         .enter().append("path")
         .attr("d", V.area)
         .style("fill", function(d) { return d[0].category.topLevel.color; })
-        .on("mouseover", function(d) { my.streamgraphMouseover(V, d); })
-        .on("mousemove", function(d) { my.streamgraphMousemove(V, d); });
+        .on("mouseover", function(d) { streamgraphMouseover(V, d); })
+        .on("mousemove", function(d) { streamgraphMousemove(V, d); });
 
-    V.svg.on("mouseleave", function() { my.streamgraphMouseleave(V); });
+    V.svg.on("mouseleave", function() { streamgraphMouseleave(V); });
 
     return V;
 };
@@ -65,7 +71,7 @@ my.makeStreamgraph = function(categories, days, jqDiv, orderedLeafCategories) {
 // Take categories and days and return an object suitable for
 // d3.stack(). The returned object is a 2-dimensional array of objects that
 // have x, y, y0, weekBegin, weekEnd and category properties.
-my.buildStackData = function(categories, orderedLeafCategories, days) {
+var buildStackData = function(categories, orderedLeafCategories, days) {
     // Build layers array.
     var layers = [];
     var categIdToLayer = {};
@@ -93,19 +99,19 @@ my.buildStackData = function(categories, orderedLeafCategories, days) {
             });
         });
         // Sanity check that the time spent adds up to an entire week.
-        var targetSeconds = my.getSecondsInWeek(weekBegin);
-        my.assert(totalSeconds == targetSeconds);
+        var targetSeconds = ticktock.getSecondsInWeek(weekBegin);
+        assert(totalSeconds == targetSeconds);
     };
     for (var i = 0; i < 7; i++) {
-        my.tallyEvents(days[i], 1, categIdToSeconds);
+        exports.tallyEvents(days[i], 1, categIdToSeconds);
     }
     saveWeek();
     for(i = 7; i < days.length; i++) {
         weekIndex += 1;
         weekBegin.add(1, 'day');
         weekEnd.add(1, 'day');
-        my.tallyEvents(days[i - 7], -1, categIdToSeconds);
-        my.tallyEvents(days[i], 1, categIdToSeconds);
+        exports.tallyEvents(days[i - 7], -1, categIdToSeconds);
+        exports.tallyEvents(days[i], 1, categIdToSeconds);
         saveWeek();
     }
     return layers;
@@ -114,29 +120,29 @@ my.buildStackData = function(categories, orderedLeafCategories, days) {
 // Add each event's duration in seconds, multiplied by coef, to the event's
 // category in categIdToSeconds. Assumes categIdToSeconds has a property for
 // every category.
-my.tallyEvents = function(events, coef, categIdToSeconds) {
+exports.tallyEvents = function(events, coef, categIdToSeconds) {
     _.each(events, function(evnt) {
-        my.assert(_.has(categIdToSeconds, evnt.category.id));
-        my.assert(my.durationSeconds(evnt) >= 0);
-        categIdToSeconds[evnt.category.id] += my.durationSeconds(evnt) * coef;
+        assert(_.has(categIdToSeconds, evnt.category.id));
+        assert(ticktock.durationSeconds(evnt) >= 0);
+        categIdToSeconds[evnt.category.id] += ticktock.durationSeconds(evnt) * coef;
     });
 };
 
 // Update HUD.
-my.streamgraphMousemove = function(V, d) {
+var streamgraphMousemove = function(V, d) {
     var position = d3.mouse(V.svg.node());
     var weekIndex = Math.round(V.x.invert(position[0]));
     weekIndex = Math.max(weekIndex, 0);
     weekIndex = Math.min(weekIndex, d.length - 1);
     var datum = d[weekIndex];
-    V.d3Div.select(".timespent").text(my.humanizeSeconds(datum.y));
-    V.d3Div.select(".perday").text(my.humanizeSeconds(datum.y / 7.0));
+    V.d3Div.select(".timespent").text(ticktock.humanizeSeconds(datum.y));
+    V.d3Div.select(".perday").text(ticktock.humanizeSeconds(datum.y / 7.0));
     V.d3Div.select(".week_begin").text(datum.weekBegin.format("YYYY MMM D"));
     V.d3Div.select(".week_end").text(datum.weekEnd.format("YYYY MMM D"));
 };
 
 // Fade all layers except the one hovered over.
-my.streamgraphMouseover = function(V, d) {
+var streamgraphMouseover = function(V, d) {
     V.svg.selectAll("path")
         .style("opacity", 0.3);
 
@@ -151,11 +157,8 @@ my.streamgraphMouseover = function(V, d) {
 };
 
 // Unfade all layers.
-my.streamgraphMouseleave = function(V) {
+var streamgraphMouseleave = function(V) {
     V.svg.selectAll("path")
         .style("opacity", 1);
     V.d3Div.select(".hud_hover").style("visibility", "hidden");
 };
-
-return my;
-}(ticktockman || {}));

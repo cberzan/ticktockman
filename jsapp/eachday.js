@@ -1,9 +1,16 @@
-var ticktockman = (function (my) {
 "use strict";
+
+var d3 = require("d3");
+var moment = require("moment");
+var _ = require("underscore");
+
+var legend = require("./legend.js");
+var oneday = require("./oneday.js");
+var ticktock = require("./ticktock.js");
 
 // Build an eachday visualization of the given days in the given div.
 // jqDiv must be a jQuery selector. The div will be emptied.
-my.makeEachday = function(categories, days, jqDiv) {
+exports.makeViz = function(categories, days, jqDiv) {
     // V is the visualization object that we will return.
     var V = {};
     V.jqDiv = jqDiv;
@@ -16,7 +23,7 @@ my.makeEachday = function(categories, days, jqDiv) {
     // Build legend.
     // TODO: position it better w.r.t. the rest of the visualization.
     var legendDiv = jqDiv.find("div.legend_container");
-    V.legend = my.makeLegend(categories, legendDiv);
+    V.legend = legend.makeViz(categories, legendDiv);
 
     // Dimensions.
     V.main_margin = {top: 0, right: 20, bottom: 0, left: 120};
@@ -62,7 +69,7 @@ my.makeEachday = function(categories, days, jqDiv) {
     // Scales. This currently misbehaves for DST, producing a slightly longer
     // or a slightly shorter day. Not sure how to fix it in a non-ugly way.
     V.x = d3.scale.linear()
-        .domain([0, my.secondsInADay])
+        .domain([0, ticktock.secondsInADay])
         .range([0, V.main_width]);
     V.y = d3.scale.ordinal()
         .domain(_.map(V.data, function(d) { return d.index; }))
@@ -84,7 +91,7 @@ my.makeEachday = function(categories, days, jqDiv) {
         .attr("transform", function(d) {
             return "translate(0, " + V.y(d.index) + ")";
         })
-        .on("click", function(d) { my.showDayModal(V, d); });
+        .on("click", function(d) { showDayModal(V, d); });
 
     // Each event becomes a rectangle within that day's row.
     V.days.selectAll("rect")
@@ -97,7 +104,7 @@ my.makeEachday = function(categories, days, jqDiv) {
       .append("title")  // tooltip
         .text(function(d) {
             return (d.category.name +
-                " (" + my.humanizeSeconds(d.endSec - d.beginSec) + ")");
+                " (" + ticktock.humanizeSeconds(d.endSec - d.beginSec) + ")");
         });
 
     // Add a footer with an x axis showing the time of day.
@@ -141,11 +148,8 @@ my.makeEachday = function(categories, days, jqDiv) {
     return V;
 };
 
-my.showDayModal = function(V, day) {
+var showDayModal = function(V, day) {
     var modalDiv = $(V.jqDiv).find(".modal");
-    V.oneday = my.makeOneday(day, modalDiv);
+    V.oneday = oneday.makeViz(day, modalDiv);
     modalDiv.modal("show");
 };
-
-return my;
-}(ticktockman || {}));
