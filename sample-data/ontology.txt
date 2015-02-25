@@ -1,0 +1,68 @@
+sleep
+food
+    breakfast
+    breakfast_with_prep
+    dinner_at_home
+    dinner_out_by_myself
+    dinner_with_prep
+    grocery_trip
+    lunch_at_home
+    lunch_out_by_myself
+    lunch_with_prep
+    snack
+leisure
+    attend_talk
+    bike_ride
+    daydream
+    photography
+    reading
+        library_trip
+        reading_fiction
+        reading_nonfiction
+    shopping
+    writing
+maintenance
+    bike_maintenance
+    evening_routine
+    haircut
+    introspection
+    laptop_maintenance
+    morning_routine
+fitness
+    exercise_routine
+    rock_climbing
+    stretches
+overhead
+    bureaucracy
+    emails
+    facebook
+    finances
+    laundry
+    overhead
+    planning
+    reading_online
+    transit
+    waiting
+social
+    dinner_social
+    friend_hangout
+    hike_social
+    lunch_social
+    meetup
+    movie_social
+    party
+    skype_parents
+work
+    advisor_meeting
+    class
+    colleague_meeting
+    group_meeting
+    homework
+    research
+        reading_papers
+        research
+    side_projects
+misc
+    driving_lesson
+    driving_practice
+    driving_test
