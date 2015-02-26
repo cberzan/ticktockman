@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+# Convert CSV dataset to JSON dataset.
+# Usage: ./csv2json.py ontology.txt segment-1.txt segment-2.txt ...
+
+# Note: The Python code is from an older incarnation of the project, and most
+# of it is not relevant for the D3 visualizer. It will be cleaned up in the
+# future.
+
 from collections import defaultdict
 from datetime import timedelta
 import argparse
