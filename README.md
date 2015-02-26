@@ -1,7 +1,7 @@
 ## Ticktockman
 
 Ticktockman visualizes time-tracking data, so you can spend more time doing
-what makes you happy. [See a demo here.](TODO)
+what makes you happy. [See a demo here.](https://cberzan.github.io/ticktockman/)
 
 Ticktockman is meant for _personal_ time tracking, i.e. tracking your entire
 day to get an understanding of how you spend your time. Ticktockman is not
@@ -54,7 +54,7 @@ columns:
 - `category`: the event's leaf category (described further below)
 - `comment`: currently ignored
 
-The `date` column should be present only for rows where the date changes, i.e.
+The `date` column should be filled only for rows where the date changes, i.e.
 for the first event in the spreadsheet, and for all events that cross the
 midnight boundary.
 
@@ -109,7 +109,7 @@ dependencies.
 The project is structured as follows: `src` contains the visualization code,
 `sample-data` contains a sample CSV dataset, and `tools` contains scripts to
 convert datasets from CSV to JSON and vice versa. `bundle` contains the
-necessary files to run Ticktockman in a browser.
+necessary files to run Ticktockman in the browser.
 
 Within `src`, the main data structures are described above the `preprocessData`
 function in `app.js`. The three visualizations appearing on the main page are
