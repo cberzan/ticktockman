@@ -1,0 +1,7 @@
+Docs fixes:
+- mention "make" needs to be run inside src/
+- mention localhost url
+- how to kill runserver?
+- data validation
+    - horrible error for when json data has seconds
+- just use second resolution instead of assming sec=00 always...
