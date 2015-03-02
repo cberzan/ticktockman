@@ -4,6 +4,7 @@
   "dependencies": {
     "browserify": "^9.0.3",
     "d3": "^3.5.5",
+    "exorcist": "^0.1.6",
     "jshint": "^2.6.0",
     "mocha": "^2.1.0",
     "moment": "^2.9.0",
