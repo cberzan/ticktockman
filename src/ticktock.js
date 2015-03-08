@@ -81,7 +81,12 @@ exports.traverseTree = function(root, func) {
 
 // Return true iff the given moment falls at midnight.
 exports.isMidnight = function(moment) {
-    return (moment.hour() === 0 && moment.minute() === 0);
+    return (
+        moment.hour() === 0 &&
+        moment.minute() === 0 &&
+        moment.second() === 0 &&
+        moment.millisecond() === 0
+    );
 };
 
 // Return duration of the given event, in seconds.
@@ -94,7 +99,7 @@ exports.durationSeconds = function(evnt) {
 exports.splitEventAtMidnight = function(evnt) {
     var pieces = [];
     var begin = evnt.begin;
-    var midnight = begin.clone().hour(0).minute(0).add(1, 'day');
+    var midnight = begin.clone().hour(0).minute(0).second(0).add(1, 'day');
     while (midnight.isBefore(evnt.end)) {
         var piece = {
             "category": evnt.category,

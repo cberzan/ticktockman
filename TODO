@@ -1,7 +1,6 @@
 Major:
 - better validation of input data (currently fails downstream, with an
   uninformative error message)
-- Support second resolution
 
 Minor:
 - nice way to kill runserver (currently have to find the pid manually)

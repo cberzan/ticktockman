@@ -112,3 +112,38 @@ test("regression: missing untracked category", function() {
     var result = app.preprocessData(events);
     assert(result.categories.root.children.untracked.name == "untracked");
 });
+
+test("regression: break on events with non-zero seconds", function() {
+    assert(ticktock.isMidnight(moment("2014-11-03 00:00:00")));
+    assert(!ticktock.isMidnight(moment("2014-11-03 00:00:12")));
+
+    var events = [
+        {
+            "category": [ "one" ],
+            "begin": "2014-11-03T00:00:12",
+            "end": "2014-11-03T08:00:34"
+        },
+        {
+            "category": [ "two" ],
+            "begin": "2014-11-03T08:00:34",
+            "end": "2014-11-04T08:15:56"
+        }
+    ];
+    var result = app.preprocessData(events);
+    var days = result.days;
+    assert(days.length == 2);
+
+    assert(days[0].length == 3);
+    assert(days[0][0].begin.isSame(moment("2014-11-03 00:00:00")));
+    assert(days[0][0].end.isSame(moment("2014-11-03 00:00:12")));
+    assert(days[0][1].begin.isSame(moment("2014-11-03 00:00:12")));
+    assert(days[0][1].end.isSame(moment("2014-11-03 08:00:34")));
+    assert(days[0][2].begin.isSame(moment("2014-11-03 08:00:34")));
+    assert(days[0][2].end.isSame(moment("2014-11-04 00:00:00")));
+
+    assert(days[1].length == 2);
+    assert(days[1][0].begin.isSame(moment("2014-11-04 00:00:00")));
+    assert(days[1][0].end.isSame(moment("2014-11-04 08:15:56")));
+    assert(days[1][1].begin.isSame(moment("2014-11-04 08:15:56")));
+    assert(days[1][1].end.isSame(moment("2014-11-05 00:00:00")));
+});
