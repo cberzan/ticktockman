@@ -116,9 +116,16 @@ function in `app.js`. The three visualizations appearing on the main page are
 in `eachday.js` (time spent by date), `sunburst.js` (time spent by activity),
 and `streamgraph.js` (changes from week to week).
 
-When you make changes to the code in `src`, run `make bundle` to update the
-packaged code in `bundle`, so you can see your changes in the browser.
+To run Ticktockman locally:
 
-To run Ticktockman in the browser, run `make runserver`.
+```
+cd src
+make bundle
+make runserver
+```
+
+Then point your browser to [http://localhost:8889/](http://localhost:8889/).
+When you make changes to the code in `src`, run `make bundle` again and refresh
+the page.
 
 To run the unit tests, run `make test`.

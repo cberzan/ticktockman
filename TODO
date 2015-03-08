@@ -1,7 +1,7 @@
-Docs fixes:
-- mention "make" needs to be run inside src/
-- mention localhost url
-- how to kill runserver?
-- data validation
-    - horrible error for when json data has seconds
-- just use second resolution instead of assming sec=00 always...
+Major:
+- better validation of input data (currently fails downstream, with an
+  uninformative error message)
+- Support second resolution
+
+Minor:
+- nice way to kill runserver (currently have to find the pid manually)
