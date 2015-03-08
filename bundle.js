@@ -421,6 +421,7 @@ process.browser = true;
 process.env = {};
 process.argv = [];
 process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
 
 function noop() {}
 
@@ -15232,10 +15233,10 @@ exports.preprocessData = function(events) {
     // malformed, something might crash much later, giving a misleading error
     // message.
 
-    // Parse ISO-8601 datetimes into Moment objects.
+    // Parse ISO-8601 datetimes into Moment objects with second resolution.
     for (var i = 0; i < events.length; i++) {
-        events[i].begin = moment(events[i].begin);
-        events[i].end = moment(events[i].end);
+        events[i].begin = moment(events[i].begin).millisecond(0);
+        events[i].end = moment(events[i].end).millisecond(0);
     }
 
     // Build categories data structure, and set the category for each event.
@@ -15298,7 +15299,7 @@ exports.preprocessData = function(events) {
     if (!ticktock.isMidnight(firstEvent.begin)) {
         _.first(days).unshift({
             "category": categories.root.children.untracked,
-            "begin": firstEvent.begin.clone().hour(0).minute(0),
+            "begin": firstEvent.begin.clone().hour(0).minute(0).second(0),
             "end": firstEvent.begin.clone(),
         });
     }
@@ -15307,7 +15308,7 @@ exports.preprocessData = function(events) {
         _.last(days).push({
             "category": categories.root.children.untracked,
             "begin": lastEvent.end.clone(),
-            "end": lastEvent.end.clone().hour(0).minute(0).add(1, 'day'),
+            "end": lastEvent.end.clone().hour(0).minute(0).second(0).add(1, 'day'),
         });
     }
 
@@ -16136,7 +16137,12 @@ exports.traverseTree = function(root, func) {
 
 // Return true iff the given moment falls at midnight.
 exports.isMidnight = function(moment) {
-    return (moment.hour() === 0 && moment.minute() === 0);
+    return (
+        moment.hour() === 0 &&
+        moment.minute() === 0 &&
+        moment.second() === 0 &&
+        moment.millisecond() === 0
+    );
 };
 
 // Return duration of the given event, in seconds.
@@ -16149,7 +16155,7 @@ exports.durationSeconds = function(evnt) {
 exports.splitEventAtMidnight = function(evnt) {
     var pieces = [];
     var begin = evnt.begin;
-    var midnight = begin.clone().hour(0).minute(0).add(1, 'day');
+    var midnight = begin.clone().hour(0).minute(0).second(0).add(1, 'day');
     while (midnight.isBefore(evnt.end)) {
         var piece = {
             "category": evnt.category,
