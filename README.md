@@ -128,4 +128,12 @@ Then point your browser to [http://localhost:8889/](http://localhost:8889/).
 When you make changes to the code in `src`, run `make bundle` again and refresh
 the page.
 
-To run the unit tests, run `make test`.
+To run the unit tests:
+
+```
+(cd src; make test)
+(cd tools; nosetests --with-doctest)
+```
+
+TODO:
+- new CSV format: attributes, times without ':'

@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import time
 from datetime import timedelta
 from functools import partial
 import csv
@@ -14,7 +15,15 @@ class RawLine(object):
         self.date_comment = None
         self.end_time = None
         self.category = None
+        self.attributes = None
         self.comment = None
+
+    def __str__(self):
+        return (
+            "date={} date_comment={} end_time={} category={} "
+            "attributes={} comment={}".format(
+                self.date, self.date_comment, self.end_time, self.category,
+                self.attributes, self.comment))
 
 
 class Event(object):
@@ -52,7 +61,9 @@ def parse_events(csvfile):
 
     # Read header.
     header = reader.next()
-    ref_header = ['date', 'date_comment', 'end_time', 'category', 'comment']
+    ref_header = [
+        'date', 'date_comment', 'end_time', 'category', 'attributes',
+        'comment']
     if header != ref_header:
         raise error("Unexpected header line: expected {} but found {}".format(
             ref_header, header))
@@ -109,8 +120,8 @@ def fields_to_raw_line(fields, error):
     """
     line = RawLine()
 
-    if len(fields) != 5:
-        raise error("Expected {} fields, but found {}".format(5, len(fields)))
+    if len(fields) != 6:
+        raise error("Expected {} fields, but found {}".format(6, len(fields)))
 
     if fields[0]:
         try:
@@ -123,14 +134,41 @@ def fields_to_raw_line(fields, error):
 
     if fields[2]:
         try:
-            line.end_time = dateutil.parser.parse(fields[2]).time()
+            line.end_time = _parse_time_str(fields[2])
         except ValueError:
-            raise error("Could not parse time")
+            raise error("Could not parse time '{}'".format(fields[2]))
 
     if fields[3]:
         line.category = fields[3]
 
     if fields[4]:
-        line.comment = fields[4]
+        line.attributes = [attr.strip() for attr in fields[4].split(',')]
+
+    if fields[5]:
+        line.comment = fields[5]
 
     return line
+
+
+def _parse_time_str(time_str):
+    """
+    Parse a time string with minute resolution, and return a time object.
+
+    Raises ValueError on parse errors.
+
+    >>> _parse_time_str('12:34')
+    datetime.time(12, 34)
+    >>> _parse_time_str('1604')
+    datetime.time(16, 4)
+    >>> _parse_time_str('3')
+    datetime.time(0, 3)
+    """
+    if ':' in time_str:
+        # Parse a time encoded as "12:34".
+        return dateutil.parser.parse(time_str).time()
+    else:
+        # Parse a time encoded as "1234".
+        time_int = int(time_str)
+        hours = time_int / 100
+        minutes = time_int % 100
+        return time(hours, minutes)
