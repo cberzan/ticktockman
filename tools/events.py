@@ -12,7 +12,6 @@ import dateutil.parser
 class RawLine(object):
     def __init__(self):
         self.date = None
-        self.date_comment = None
         self.end_time = None
         self.category = None
         self.attributes = None
@@ -20,10 +19,9 @@ class RawLine(object):
 
     def __str__(self):
         return (
-            "date={} date_comment={} end_time={} category={} "
-            "attributes={} comment={}".format(
-                self.date, self.date_comment, self.end_time, self.category,
-                self.attributes, self.comment))
+            "date={} end_time={} category={} attributes={} comment={}"
+            .format(self.date, self.end_time, self.category,
+                    self.attributes, self.comment))
 
 
 class Event(object):
@@ -47,11 +45,11 @@ def parse_events(csvfile):
     """
     Read list of events from the given CSV file.
 
-    CSV columns: date,date_comment,end_time,category,comment
+    CSV columns: date,end_time,category,comment
 
     The `date` is expected to appear only when the time crosses midnight. The
-    `date_comment` is ignored. The `comment` column is optional. The logical
-    `begin_time` of an event is the `end_time` of the event above it.
+    `comment` column is optional. The logical `begin_time` of an event is the
+    `end_time` of the event above it.
 
     Returns a list of Event objects. The events are in chronological order,
     cover a contiguous stretch of time, and do not overlap.
@@ -61,9 +59,7 @@ def parse_events(csvfile):
 
     # Read header.
     header = reader.next()
-    ref_header = [
-        'date', 'date_comment', 'end_time', 'category', 'attributes',
-        'comment']
+    ref_header = ['date', 'end_time', 'category', 'attributes', 'comment']
     if header != ref_header:
         raise error("Unexpected header line: expected {} but found {}".format(
             ref_header, header))
@@ -120,7 +116,7 @@ def fields_to_raw_line(fields, error):
     """
     line = RawLine()
 
-    if len(fields) != 6:
+    if len(fields) != 5:
         raise error("Expected {} fields, but found {}".format(6, len(fields)))
 
     if fields[0]:
@@ -130,22 +126,19 @@ def fields_to_raw_line(fields, error):
             raise error("Could not parse date")
 
     if fields[1]:
-        line.date_comment = fields[1]
+        try:
+            line.end_time = _parse_time_str(fields[1])
+        except ValueError:
+            raise error("Could not parse time '{}'".format(fields[1]))
 
     if fields[2]:
-        try:
-            line.end_time = _parse_time_str(fields[2])
-        except ValueError:
-            raise error("Could not parse time '{}'".format(fields[2]))
+        line.category = fields[2]
 
     if fields[3]:
-        line.category = fields[3]
+        line.attributes = [attr.strip() for attr in fields[3].split(',')]
 
     if fields[4]:
-        line.attributes = [attr.strip() for attr in fields[4].split(',')]
-
-    if fields[5]:
-        line.comment = fields[5]
+        line.comment = fields[4]
 
     return line
 

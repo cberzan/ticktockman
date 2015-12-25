@@ -136,4 +136,5 @@ To run the unit tests:
 ```
 
 TODO:
-- new CSV format: attributes, times without ':'
+- new CSV format: attributes, times without ':', no date_comment
+- sample data (csv, json) need to be updated
