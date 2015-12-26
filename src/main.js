@@ -1,7 +1,11 @@
-/* global window */
+var Papa = require("papaparse");
 
-// Run ticktockman in the browser.
-// Assume window.sampleData is defined.
+// Run ticktockman in the browser and load data.csv.
 var app = require("./app.js");
 app.setup();
-app.loadData(window.sampleData);
+Papa.parse("data.csv", {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: app.loadDataCSV,
+});

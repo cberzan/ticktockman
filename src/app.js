@@ -3,6 +3,7 @@
 var assert = require("assert");
 var d3 = require("d3");
 var moment = require("moment");
+// var Papa = require("papaparse");
 var _ = require("underscore");
 
 var eachday = require("./eachday.js");
@@ -195,9 +196,34 @@ exports.preprocessData = function(events) {
     return {"categories": categories, "days": days};
 };
 
+// TODO docs
+// `results` is the result of a PapaParse CSV parse.
+exports.loadDataCSV = function(results) {
+    if (results.errors.length > 0) {
+        console.log("found csv errors:");
+        console.log(results.errors);
+        exports.error("csv errors: " + results.errors);
+    }
+    if (!_.isEqual(results.meta.fields, [
+            'begin_date', 'begin_time', 'end_date', 'end_time',
+            'category', 'attributes', 'comment'])) {
+        exports.error("unexpected csv header " + results.meta.fields);
+    }
+    var events = [];
+    _.each(results.data, function(row) {
+        events.push({
+            begin: row.begin_date + ' ' + row.begin_time,
+            end: row.end_date + ' ' + row.end_time,
+            category: _.rest(row.category.split('/'))
+            // TODO: clean up handling of root node...
+        });
+    });
+    exports.loadDataJSON(events);
+};
+
 // Main entry point to the application.
 // Visualize the given events, replacing any previous visualization.
-exports.loadData = function(events) {
+exports.loadDataJSON = function(events) {
     // This is the application object we will return.
     var app = {};
 
@@ -239,13 +265,19 @@ exports.setup = function() {
     $("#visualize").click(function() {
         try {
             var data = $.parseJSON($("#data-pastebin").val());
-            exports.loadData(data);
+            exports.loadDataJSON(data);
             $("#load-data-modal").modal("hide");
         } catch(err) {
-            $("#load-data-modal .error-message").text(err);
-            $("#load-data-modal .error").show();
-            // Propagate exception to allow console debugging.
-            throw err;
+            exports.error(err);
         }
     });
+};
+
+// Report error.
+// FIXME: Doesn't work on initial load because #load-data-modal is not shown.
+exports.error = function(err) {
+    $("#load-data-modal .error-message").text(err);
+    $("#load-data-modal .error").show();
+    // Propagate exception to allow console debugging.
+    throw err;
 };

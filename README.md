@@ -139,3 +139,4 @@ TODO:
 - new CSV format: attributes, times without ':', no date_comment, start_date,
   start_time, and no more segments...
 - sample data (csv, json) need to be updated
+- load modal needs to load csv now instead of json
