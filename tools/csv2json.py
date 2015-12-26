@@ -48,6 +48,8 @@ if __name__ == "__main__":
     time_tree = build_time_tree(onto_tree, categ_to_time)
 
     # Print the tree.
+    # NOTE: The average time per day is no longer accurate, since we include
+    # the untracked time in the denominator.
     print "Time by category:"
     print_time_tree(time_tree)
 
