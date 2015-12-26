@@ -1,6 +1,5 @@
 from datetime import datetime
 from datetime import time
-from datetime import timedelta
 from functools import partial
 import csv
 import dateutil.parser
@@ -11,7 +10,9 @@ import dateutil.parser
 
 class RawLine(object):
     def __init__(self):
-        self.date = None
+        self.begin_date = None
+        self.begin_time = None
+        self.end_date = None
         self.end_time = None
         self.category = None
         self.attributes = None
@@ -19,9 +20,10 @@ class RawLine(object):
 
     def __str__(self):
         return (
-            "date={} end_time={} category={} attributes={} comment={}"
-            .format(self.date, self.end_time, self.category,
-                    self.attributes, self.comment))
+            "begin_date={} begin_time={} end_date={} end_time={} "
+            "category={} attributes={} comment={}".format(
+                self.begin_date, self.begin_time, self.end_date, self.end_time,
+                self.category, self.attributes, self.comment))
 
 
 class Event(object):
@@ -45,11 +47,24 @@ def parse_events(csvfile):
     """
     Read list of events from the given CSV file.
 
-    CSV columns: date,end_time,category,comment
+    CSV columns:
 
-    The `date` is expected to appear only when the time crosses midnight. The
-    `comment` column is optional. The logical `begin_time` of an event is the
-    `end_time` of the event above it.
+    - begin_date:
+        If missing, assumed to be the previous event's end_date.
+    - begin_time:
+        If missing, assumed to be the previous event's end_time.
+    - end_date:
+        If missing, assumed to be the previous event's end_date.
+        Consequence: end_date must be present when end_time crosses midnight.
+    - end_time:
+        Must be present.
+    - category:
+        Must be present.
+    - comment:
+        Optional.
+
+    The `begin_time` and `end_time` columns accept two time formats: "12:34" or
+    "1234". Note that in the latter format, "00:05" becomes just "5".
 
     Returns a list of Event objects. The events are in chronological order,
     cover a contiguous stretch of time, and do not overlap.
@@ -59,53 +74,57 @@ def parse_events(csvfile):
 
     # Read header.
     header = reader.next()
-    ref_header = ['date', 'end_time', 'category', 'attributes', 'comment']
+    ref_header = [
+        'begin_date', 'begin_time', 'end_date', 'end_time', 'category',
+        'attributes', 'comment']
     if header != ref_header:
         raise error("Unexpected header line: expected {} but found {}".format(
             ref_header, header))
 
-    # Read first row.
-    prev_row = fields_to_raw_line(reader.next(), error)
-    if not prev_row.date:
-        raise error("First row must specify date")
-    if prev_row.end_time is None:
-        raise error("first row must specify end_time")
-    prev_event_end = datetime.combine(prev_row.date, prev_row.end_time)
-
-    # Read subsequent rows.
+    # Read rows.
     events = []
-    one_day = timedelta(days=1)
     for lineno, fields in enumerate(reader, 3):
         row = fields_to_raw_line(fields, error)
 
-        # Date should appear iff time crosses midnight.
-        # If date doesn't appear, fill it in from the prev_row.
-        if row.date:
-            if row.date != prev_row.date + one_day:
-                raise error("Expected the day after, but got a different date")
-            if row.end_time >= prev_row.end_time:
-                raise error("Got date but did not expect one")
-        else:
-            if row.end_time <= prev_row.end_time:
-                raise error("Expected date, but did not get one")
-            row.date = prev_row.date
-
-        # End time and category should always appear.
+        # end_time and category should always be specified.
         if row.end_time is None:
-            raise error("Expected end_time")
+            raise error("Missing end_time")
         if not row.category:
-            raise error("Expected category")
+            raise error("Missing category")
+
+        # Infer end_date if it's missing.
+        if row.end_date is None:
+            if not events:
+                raise error("Cannot infer end_date")
+            row.end_date = events[-1].end.date()
+
+        # Infer begin_date and begin_time if they're missing.
+        if row.begin_date is None:
+            if not events:
+                raise error("Cannot infer begin_date")
+            row.begin_date = events[-1].end.date()
+        if row.begin_time is None:
+            if not events:
+                raise error("Cannot infer begin_time")
+            row.begin_time = events[-1].end.time()
 
         # Assemble event.
         event = Event()
-        event.begin = prev_event_end
-        event.end = datetime.combine(row.date, row.end_time)
+        event.begin = datetime.combine(row.begin_date, row.begin_time)
+        event.end = datetime.combine(row.end_date, row.end_time)
         event.category = row.category
         event.comment = row.comment
 
+        # Validate dates and times.
+        if event.begin >= event.end:
+            raise error("Event spans negative time: {}".format(event))
+        if events:
+            if event.begin != events[-1].end:
+                raise error(
+                    "Event {} does not occur directly after previous event {}"
+                    .format(event, events[-1]))
+
         events.append(event)
-        prev_row = row
-        prev_event_end = event.end
 
     return events
 
@@ -114,32 +133,34 @@ def fields_to_raw_line(fields, error):
     """
     Parse a list of strings (`fields`) into a RawLine object.
     """
+
+    def parse_date(date_str):
+        if not date_str:
+            return None
+        try:
+            return dateutil.parser.parse(date_str).date()
+        except ValueError:
+            raise error("Could not parse date '{}'".format(date_str))
+
+    def parse_time(time_str):
+        if not time_str:
+            return None
+        try:
+            return _parse_time_str(time_str)
+        except ValueError:
+            raise error("Could not parse time '{}'".format(time_str))
+
+    if len(fields) != 7:
+        raise error("Expected {} fields, but found {}".format(7, len(fields)))
+
     line = RawLine()
-
-    if len(fields) != 5:
-        raise error("Expected {} fields, but found {}".format(6, len(fields)))
-
-    if fields[0]:
-        try:
-            line.date = dateutil.parser.parse(fields[0]).date()
-        except ValueError:
-            raise error("Could not parse date")
-
-    if fields[1]:
-        try:
-            line.end_time = _parse_time_str(fields[1])
-        except ValueError:
-            raise error("Could not parse time '{}'".format(fields[1]))
-
-    if fields[2]:
-        line.category = fields[2]
-
-    if fields[3]:
-        line.attributes = [attr.strip() for attr in fields[3].split(',')]
-
-    if fields[4]:
-        line.comment = fields[4]
-
+    line.begin_date = parse_date(fields[0])
+    line.begin_time = parse_time(fields[1])
+    line.end_date = parse_date(fields[2])
+    line.end_time = parse_time(fields[3])
+    line.category = fields[4] or None
+    line.attributes = fields[5] or None
+    line.comment = fields[6] or None
     return line
 
 

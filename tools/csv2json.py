@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Convert CSV dataset to JSON dataset.
-# Usage: ./csv2json.py ontology.txt segment-1.txt segment-2.txt ...
+# Usage: ./csv2json.py ontology.txt events.csv
 
 # Note: The Python code is from an older incarnation of the project, and most
 # of it is not relevant for the D3 visualizer. It will be cleaned up in the
@@ -13,7 +13,6 @@ import argparse
 import itertools
 import json
 
-from events import Event
 from events import parse_events
 from ontology import parse_ontology
 from time_tree import build_time_tree
@@ -24,31 +23,18 @@ if __name__ == "__main__":
     # Parse command-line args.
     parser = argparse.ArgumentParser(description="Process time-tracking data.")
     parser.add_argument('ontology', help="path to ontology file")
-    parser.add_argument('segment', nargs='+', help="path to segment file")
+    parser.add_argument('events_path', help="path to events file")
     args = parser.parse_args()
 
-    # Read event segments.
-    segments = []
-    for segment_path in args.segment:
-        events = parse_events(open(segment_path))
-        segments.append(events)
-    total_time = timedelta()
-
-    # Print a summary of time tracked.
-    print "Have {} segments:".format(len(segments))
-    for events in segments:
-        segment_time = events[-1].end - events[0].begin
-        print "    from {} to {} (time tracked: {})".format(
-            events[0].begin, events[-1].end, segment_time)
-        total_time += segment_time
-    print "Total time tracked: {}".format(total_time)
-    print
+    # Read events and print summary.
+    events = parse_events(open(args.events_path))
+    print "Events span from {} to {}".format(events[0].begin, events[-1].end)
+    print "Total time tracked: {}".format(events[-1].end - events[0].begin)
 
     # Group events by category.
     categ_to_time = defaultdict(timedelta)
-    for segment in segments:
-        for event in segment:
-            categ_to_time[event.category] += event.duration()
+    for event in events:
+        categ_to_time[event.category] += event.duration()
 
     # Read the ontology and check for missing categories.
     onto_tree = parse_ontology(open(args.ontology))
@@ -81,7 +67,7 @@ if __name__ == "__main__":
             for path in paths:
                 new_paths.append([node.label] + path)
             return new_paths
-    leaf_categ_to_categ_path = {'untracked': ['untracked']}
+    leaf_categ_to_categ_path = {}
     for path in onto_tree.transform(func):
         assert path[-1] not in leaf_categ_to_categ_path
         leaf_categ_to_categ_path[path[-1]] = path
@@ -96,16 +82,6 @@ if __name__ == "__main__":
             data['comment'] = event.comment
         return data
 
-    event_dicts = []
-    for i, segment in enumerate(segments):
-        # Add "untracked" event between segments.
-        if i > 0:
-            event = Event()
-            event.begin = segments[i - 1][-1].end
-            event.end = segment[0].begin
-            event.category = 'untracked'
-            event_dicts.append(event_to_dict(event))
-        for event in segment:
-            event_dicts.append(event_to_dict(event))
+    event_dicts = [event_to_dict(event) for event in events]
     with open("out.json", "w") as f:
         json.dump(event_dicts, f, indent=4)
