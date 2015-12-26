@@ -1,9 +1,12 @@
 "use strict";
 
+var assert = require("assert");
 var d3 = require("d3");
 var _ = require("underscore");
 
 var ticktock = require("./ticktock.js");
+
+var artificialLeafName = '_artificial_leaf';
 
 // Some parts of this file are based on http://bl.ocks.org/kerryrodden/7090426.
 // Those parts are Copyright 2013 Google Inc, under the Apache 2.0 license.
@@ -55,6 +58,11 @@ exports.makeViz = function(categories, days, div) {
             return (d.dx > 0.005); // 0.005 radians = 0.29 degrees
         });
 
+    // Filter out artificial leaves.
+    sunburst.nodes = sunburst.nodes.filter(function(d) {
+        return (d.name != artificialLeafName);
+    });
+
     sunburst.path = sunburst.container
       .data([sunburst.partitionData]).selectAll("path")
         .data(sunburst.nodes)
@@ -94,9 +102,32 @@ var buildPartitionData = function(categories, days) {
                 "children": childResults,
             };
         });
+
+    // Add an artificial leaf to each node in the newTree.
+    // We do this to support events with non-leaf categories, e.g.
+    // '/overhead/transit' becomes '/overhead/transit/_'. This is
+    // necessary because d3.partition.nodes() does not support
+    // non-zero sizes on non-leaf nodes.
+    ticktock.traverseTree(newTree, function(newNode) {
+        newNode.children.push({
+            name: artificialLeafName,
+            category: newNode.category,  // same as its parent
+            children: []
+        });
+    });
+
+    // Build a mapping from category ID to newNode.
     var categIdToNewNode = {};
     ticktock.traverseTree(newTree, function(newNode) {
-        categIdToNewNode[newNode.category.id] = newNode;
+        if (newNode.children.length === 0) {
+            // This is an artificial leaf. Do nothing.
+        } else {
+            // This is a node corresponding to a category.
+            // Associate the category with the node's artificial leaf.
+            var artificialLeaf = _.last(newNode.children);
+            assert(artificialLeaf.name == artificialLeafName);
+            categIdToNewNode[newNode.category.id] = artificialLeaf;
+        }
     });
 
     // Sum up time spent at the leaves.
@@ -105,12 +136,6 @@ var buildPartitionData = function(categories, days) {
             if (evnt.category.name === "untracked") {
                 // newTree contains "untracked", but we leave its size as 0.
                 return;
-            }
-            if (_.size(evnt.category.children) > 0) {
-                // FIXME: Check how d3.partition.nodes() deals with non-zero
-                // size attributes on non-leaf nodes. Support events whose
-                // category is not a leaf.
-                throw new Error("category " + evnt.category + " is not a leaf");
             }
             var newNode = categIdToNewNode[evnt.category.id];
             if (!_.has(newNode, "size")) {
