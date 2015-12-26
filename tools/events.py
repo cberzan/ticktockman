@@ -20,8 +20,8 @@ class RawLine(object):
 
     def __str__(self):
         return (
-            "begin_date={} begin_time={} end_date={} end_time={} "
-            "category={} attributes={} comment={}".format(
+            "RawLine(begin_date={} begin_time={} end_date={} end_time={} "
+            "category={} attributes={} comment={})".format(
                 self.begin_date, self.begin_time, self.end_date, self.end_time,
                 self.category, self.attributes, self.comment))
 
@@ -31,7 +31,23 @@ class Event(object):
         self.begin = None
         self.end = None
         self.category = None
+        self.attributes = None
         self.comment = None
+
+    def __str__(self):
+        return (
+            "Event(begin={} end={} category={} attributes={} comment={})"
+            .format(self.begin, self.end, self.category, self.attributes,
+                    self.comment))
+
+    def __eq__(self, other):
+        for field in ('begin', 'end', 'category', 'attributes', 'comment'):
+            if getattr(self, field) != getattr(other, field):
+                return False
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
 
     def duration(self):
         return self.end - self.begin
@@ -43,7 +59,12 @@ class ParseError(Exception):
             "{}:{}: {}".format(csvfile.name, reader.line_num, message))
 
 
-def parse_events(csvfile):
+CSV_HEADER = [
+    'begin_date', 'begin_time', 'end_date', 'end_time', 'category',
+    'attributes', 'comment']
+
+
+def read_events_csv(csvfile):
     """
     Read list of events from the given CSV file.
 
@@ -74,12 +95,9 @@ def parse_events(csvfile):
 
     # Read header.
     header = reader.next()
-    ref_header = [
-        'begin_date', 'begin_time', 'end_date', 'end_time', 'category',
-        'attributes', 'comment']
-    if header != ref_header:
+    if header != CSV_HEADER:
         raise error("Unexpected header line: expected {} but found {}".format(
-            ref_header, header))
+            CSV_HEADER, header))
 
     # Read rows.
     events = []
@@ -113,6 +131,7 @@ def parse_events(csvfile):
         event.begin = datetime.combine(row.begin_date, row.begin_time)
         event.end = datetime.combine(row.end_date, row.end_time)
         event.category = row.category
+        event.attributes = row.attributes
         event.comment = row.comment
 
         # Validate dates and times.
@@ -186,3 +205,21 @@ def _parse_time_str(time_str):
         hours = time_int / 100
         minutes = time_int % 100
         return time(hours, minutes)
+
+
+def write_events_csv(events, csvfile):
+    """
+    Write list of Event objects to the given CSV file.
+    """
+    writer = csv.writer(csvfile)
+    writer.writerow(CSV_HEADER)
+    for event in events:
+        writer.writerow([
+            event.begin.date().isoformat(),
+            event.begin.time().isoformat(),
+            event.end.date().isoformat(),
+            event.end.time().isoformat(),
+            event.category,
+            event.attributes,
+            event.comment
+        ])
